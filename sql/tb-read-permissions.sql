@@ -1,0 +1,19 @@
+-- Additional read-only permissions for the DS-DR TB register.
+GRANT SELECT ON report.tb_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_register_treatment_current_status TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_register_tb_risk_group TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_register_palliative_care_offered TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_contact_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_directly_observed_treatment_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_appointment_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_visit_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.laboratory_request_order_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.laboratory_request_order_value_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.person_identification_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.patient_diagnosis_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.relationship_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON facility.province TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON terminology.tb_risk_group TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.tb_notification TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.tb_adverse_event TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.patient_tpt TO 'attendance_api'@'127.0.0.1';

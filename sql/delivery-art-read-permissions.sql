@@ -1,0 +1,21 @@
+-- Additional table-scoped read permissions for Delivery and general ART registers.
+GRANT SELECT ON report.live_birth_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.placenta_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.cervix_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.partogram_reading_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.list_of_drugs_given_during_labour TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.person_birth_defect_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.doctor_examination_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.nurse_examination_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.death_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.delivery_summary TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.patient TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.anc TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON terminology.birth_defect TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.art_visit_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.art_transfer_in_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.hts_confirm_diagnosis_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.art_linkage_from TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.art_ipt_status_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.client_profile_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tpt_screening_report TO 'attendance_api'@'127.0.0.1';

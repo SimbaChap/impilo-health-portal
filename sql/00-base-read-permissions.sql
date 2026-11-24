@@ -1,0 +1,9 @@
+GRANT SELECT ON consultation.hts TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.malaria TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.malaria_travel_history TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.cbs_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.hts_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.hts_register_test TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.investigation_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.patient_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.person_demographic TO 'attendance_api'@'127.0.0.1';

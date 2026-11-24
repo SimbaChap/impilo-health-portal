@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="./auth.js?v=1"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>National Health Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0b1f3a;--ink2:#465f88;--muted:#637797;--line:#e3e9f3;--grid:#edf1f7;--surface:#fff;--green:#218a39;--green-dark:#176c2b;--green-light:#cfe9d5;--gold:#d99a00;--rose:#c62f2f;--dot:#8a9bb8}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+h1,h2,h3{font-family:"Plus Jakarta Sans",Inter,sans-serif;margin:0}
+button{font:inherit}
+.wrap{display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 10px 25px -18px rgba(11,31,58,.25)}
+.card h2{font-size:15px;font-weight:700}
+.sub{font-size:12px;color:var(--muted);margin-top:3px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;padding:12px 16px}
+.toolbar label{display:block;font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:5px}
+.toolbar select,.toolbar input{font:inherit;font-size:13px;padding:7px 10px;border:1px solid #d7dfec;border-radius:9px;background:#f8fafc;color:var(--ink);max-width:230px}
+.toolbar select:disabled{opacity:.55}
+.btn{font-size:13px;font-weight:600;border-radius:9px;padding:8px 14px;border:1px solid var(--green);background:var(--green);color:#fff;cursor:pointer}
+.btn:hover{background:var(--green-dark)}
+.btn.ghost{background:#fff;color:var(--green)}
+.btn.ghost:hover{background:#ecf7ee}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
+.crumbs button{border:0;background:none;padding:0;color:var(--green);font-weight:600;cursor:pointer}
+.crumbs button:hover{text-decoration:underline}
+.crumbs .here{font-weight:700}
+.crumbs .sep{color:var(--muted)}
+.scopehead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:center}
+.scopehead h1{font-size:21px;font-weight:800;margin-top:6px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green-dark);background:#ecf7ee;border:1px solid var(--green-light);border-radius:999px;padding:4px 10px}
+.live:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.tiles.k8{grid-template-columns:repeat(4,1fr)}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .label{font-size:12px;color:var(--ink2)}
+.kpi .value{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .detail{font-size:11.5px;color:var(--muted);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.mapgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+.mapbox{position:relative;margin-top:10px}
+.mapbox svg{display:block;width:100%;height:auto}
+.prov{fill:#f1f5f9;stroke:#fff;stroke-width:1.5;cursor:pointer;transition:fill .15s}
+.prov:hover{fill:#e2ecf5}
+.prov.sel{fill:#e6f3e9}
+.prov.dim{fill:#f6f8fb;cursor:pointer}
+.prov.choro:hover,.dist:hover{filter:brightness(.92)}
+.dist{cursor:default}
+.hbar .row.hot .fill{background:var(--green-dark)}
+.hbar .row.hot .name{font-weight:700}
+.ranking{max-height:600px;overflow:auto;padding-right:4px}
+.sexrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.sexbox{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.sexbox svg{flex:none}
+.sexbox .v{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.sexbox .l{font-size:12px;color:var(--ink2)}
+.split{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:8px;gap:2px}
+.pyr{margin-top:8px;font-size:11.5px}
+.pyr .r{display:grid;grid-template-columns:1fr 46px 1fr;align-items:center;height:17px}
+.pyr .r:hover{background:#f5f8fb}
+.pyr .m{display:flex;justify-content:flex-end}.pyr .f{display:flex;justify-content:flex-start}
+.pyr .b{height:11px}
+.pyr .m .b{background:#0d9488;border-radius:3px 0 0 3px}.pyr .f .b{background:#d99a00;border-radius:0 3px 3px 0}
+.pyr .age{text-align:center;color:var(--ink2);font-variant-numeric:tabular-nums}
+.pyr .head{display:grid;grid-template-columns:1fr 46px 1fr;font-weight:700;color:var(--ink2);margin-bottom:4px}
+.pyr .head span:first-child{text-align:right}.pyr .axis2{display:grid;grid-template-columns:1fr 46px 1fr;color:var(--muted);margin-top:3px}
+.panel-h{font-size:12.5px;font-weight:700;margin:16px 0 2px;color:var(--ink)}
+.nodata-rows{margin-top:10px;border-top:1px solid var(--grid);padding-top:6px}
+.nodata-rows .nd{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--muted);padding:5px 0;cursor:default}
+.nodata-rows .nd.click{cursor:pointer}
+.nodata-rows .nd small{font-size:11px}
+.nodata-rows .nd.hot{color:var(--ink);font-weight:600}
+.maphead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px}
+.maphead label{font-size:11px;font-weight:700;color:var(--ink2);display:block;margin-bottom:4px}
+.seg{display:inline-flex;border:1px solid #d7dfec;border-radius:9px;overflow:hidden;background:#f8fafc}
+.seg button{border:0;background:none;padding:6px 11px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.seg button+button{border-left:1px solid #d7dfec}
+.seg button[aria-pressed=true]{background:var(--green);color:#fff}
+.seg button:disabled{opacity:.5;cursor:default}
+.mapctl{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.maphead select{font:inherit;font-size:13px;padding:6px 10px;border:1px solid #d7dfec;border-radius:9px;background:#f8fafc;color:var(--ink)}
+.ramp{display:inline-flex;align-items:center;gap:6px}
+.ramp i{display:inline-block;width:18px;height:10px}
+.ramp i:first-of-type{border-radius:3px 0 0 3px}.ramp i:last-of-type{border-radius:0 3px 3px 0}
+.nodata{display:inline-block;width:14px;height:10px;border-radius:3px;background:repeating-linear-gradient(45deg,#e9eef5 0 2px,#f8fafc 2px 4px);border:1px solid #d7dfec}
+.muted-list{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+.provlabel{font-size:11px;fill:var(--ink2);font-weight:600;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--dot)}
+.sw.on{background:var(--green);box-shadow:0 0 0 2px #fff,0 0 0 3px var(--green)}
+table.data{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:10px}
+table.data th{font-size:11px;color:var(--ink2);text-align:right;font-weight:700;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{padding:7px 8px;border-bottom:1px solid var(--grid);text-align:right;font-variant-numeric:tabular-nums}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data tr.click{cursor:pointer}
+table.data tr.click:hover td{background:#f5faf6}
+table.data td.name{font-weight:600;color:var(--ink)}
+table.data tr.click td.name{color:var(--green-dark)}
+.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill.on{background:#ecf7ee;color:var(--green-dark)}
+.pill.off{background:#f1f5f9;color:var(--muted)}
+.pill.no{background:#fdecec;color:#b42318}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;margin-top:10px;font-size:12.5px}
+.hbar .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar .name small{color:var(--muted);font-size:10.5px;margin-left:6px}
+.hbar .track{grid-column:1/2;height:10px;display:flex}
+.hbar .fill{height:10px;background:var(--green);border-radius:0 4px 4px 0;min-width:2px}
+.hbar .num{grid-row:span 2;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.hbar .row{display:contents}
+.hbar .row:hover .fill{background:var(--green-dark)}
+.hbar .row.click{cursor:pointer}
+.multiples{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 24px;margin-top:12px}
+.multiples h3{font-size:12.5px;font-weight:700;font-family:Inter,sans-serif;margin:8px 0 2px;display:flex;justify-content:space-between}
+.multiples h3 span{font-weight:500;color:var(--muted)}
+svg text{font-family:Inter,sans-serif}
+.axis{fill:var(--muted);font-size:10.5px}
+.meter{margin-top:12px}
+.meter .top{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
+.meter .track{height:8px;border-radius:4px;background:#fdf1d6;overflow:hidden}
+.meter .fill{height:100%;background:var(--gold);border-radius:0 4px 4px 0}
+.meter.ok .track{background:var(--green-light)}.meter.ok .fill{background:var(--green)}
+details.table{margin-top:12px;font-size:12px}
+details.table summary{cursor:pointer;color:var(--green);font-weight:600}
+.section{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin-top:6px}
+.section h2{font-size:17px;font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.empty{text-align:center;padding:34px 20px}
+.empty h3{font-size:16px;margin-bottom:6px}
+.empty p{color:var(--ink2);max-width:620px;margin:0 auto 14px;line-height:1.5}
+.osm{border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:200px;position:relative;background:#eef3f8}
+.osm iframe{border:0;width:100%;height:100%;min-height:200px;display:block}
+.osm .fallback{position:absolute;inset:auto 0 0 0;font-size:11px;padding:6px 10px;background:rgba(255,255,255,.9);color:var(--muted)}
+dl.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0 0;font-size:13px}
+dl.facts dt{color:var(--muted)}
+dl.facts dd{margin:0;font-weight:600}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:7px 10px;border-radius:8px;box-shadow:0 8px 20px -8px rgba(0,0,0,.4);display:none;z-index:20;max-width:320px;line-height:1.45}
+.status{padding:30px;text-align:center;color:var(--muted)}
+.embedded .toolbar{display:none}
+.status.error{color:var(--rose)}
+.foot{font-size:11.5px;color:var(--muted);padding:2px 4px 6px;line-height:1.5}
+@media(max-width:1100px){.tiles{grid-template-columns:repeat(3,1fr)}.tiles.k8{grid-template-columns:repeat(2,1fr)}.grid2,.grid3,.mapgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card toolbar" role="group" aria-label="Dashboard filters">
+    <div><label for="province">Province</label><select id="province"><option value="">All provinces</option></select></div>
+    <div><label for="district">District</label><select id="district" disabled><option value="">All districts</option></select></div>
+    <div><label for="ftype">Facility type</label>
+      <select id="ftype">
+        <option value="">All facility types</option>
+        <option value="CLINIC">Clinics</option>
+        <optgroup label="Hospitals">
+          <option value="HOSPITAL">All hospitals</option>
+          <option value="RURAL_HOSPITAL">Rural hospitals</option>
+          <option value="DISTRICT_HOSPITAL">District hospitals</option>
+          <option value="PROVINCIAL_HOSPITAL">Provincial hospitals</option>
+          <option value="CENTRAL_HOSPITAL">Central hospitals</option>
+          <option value="OTHER_HOSPITAL">Other hospitals</option>
+        </optgroup>
+      </select></div>
+    <div><label for="facility">Facility</label><select id="facility"><option value="">All facilities</option></select></div>
+    <div><label for="period">Period</label>
+      <select id="period">
+        <option value="12">Last 12 months of data</option>
+        <option value="6">Last 6 months of data</option>
+        <option value="3">Last 3 months of data</option>
+        <option value="custom">Custom dates</option>
+      </select></div>
+    <div id="customDates" style="display:none;gap:10px">
+      <div><label for="from">From</label><input type="date" id="from"></div>
+      <div><label for="to">To</label><input type="date" id="to"></div>
+      <div style="align-self:end"><button class="btn" id="apply" type="button">Apply</button></div>
+    </div>
+    <div style="margin-left:auto;align-self:center"><button class="btn ghost" id="reset" type="button">Reset to national</button></div>
+  </div>
+  <div id="content"><div class="card status">Loading national dashboard…</div></div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+// Province outlines: geoBoundaries (CC BY 4.0), the same shapes the portal's original map used.
+const PROVINCES=__PROVINCES__;
+// District outlines: geoBoundaries ZWE ADM2 (CC BY 4.0), projected and simplified by web-src/build_districts.py.
+const DISTRICTS=__DISTRICTS__;
+// Same projection as the portal map: longitude/latitude to the 600 x 552 map space.
+const K=81.05493754657579;
+const project=(lon,lat)=>[(lon-25.237597177423254)*.9454384408440947*K,(-15.60714602564883-lat)*K];
+const API='http://127.0.0.1:8765/api';
+const $=id=>document.getElementById(id);
+const fmt=n=>n==null?'—':Number(n).toLocaleString('en-GB');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const monthLabel=(m,long)=>new Date(m+'-01T00:00:00').toLocaleDateString('en-GB',long?{month:'long',year:'numeric'}:{month:'short'});
+const dayLabel=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+const pct=(a,b)=>b?(a/b*100<1&&a?'<1':Math.round(a/b*100))+'%':'—';
+let geo=null,latestDate=null,current=null,requestSeq=0;
+// Indicators the map can shade regions by. Values come from facilities reporting to the warehouse.
+const MAP_INDICATORS=[['','Facilities only'],['opd','OPD General visits'],['attendances','Attendances'],['htsTests','HIV tests (HTS)'],['hivPositive','HIV positive cases'],['ancBookings','ANC registrations'],['artNew','New on ART'],['tbRegistered','TB registrations'],['malariaTests','Malaria tests'],['malariaPositive','Malaria positive cases']];
+// Sequential ramp: one hue, light to dark (higher value = darker).
+const RAMP=['#e4f2e7','#b7dcbf','#7cc08e','#3d9a57','#1b6b31'];
+let shadeBy='province';try{const v=localStorage.getItem('impilo.mapShadeBy');if(['province','district','facility'].includes(v))shadeBy=v}catch{}
+let mapIndicator='opd';try{const v=localStorage.getItem('impilo.mapIndicator');if(v!==null&&MAP_INDICATORS.some(m=>m[0]===v))mapIndicator=v}catch{}
+const indLabel=k=>(MAP_INDICATORS.find(m=>m[0]===k)||[])[1]||'';
+const rampStep=(v,max)=>v==null?null:max>0?Math.min(4,Math.floor(v/max*5-1e-9<0?0:v/max*5-1e-9)):0;
+// Inside the portal this page follows the portal-wide filter bar; opened directly it uses its own toolbar.
+const EMBEDDED=window.parent!==window;let globalFilters=null,geoReady=false;
+if(EMBEDDED)document.documentElement.classList.add('embedded');
+
+// Bounding box of each province outline, used to zoom the map to the selected province.
+const BOXES={};
+for(const p of PROVINCES){const n=p.d.match(/-?\d+(\.\d+)?/g).map(Number);const xs=n.filter((_,i)=>i%2===0),ys=n.filter((_,i)=>i%2===1);BOXES[p.name]=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}
+
+function postHeight(){parent.postMessage({type:'facility-dashboard-height',height:document.documentElement.scrollHeight},'*')}
+new ResizeObserver(postHeight).observe(document.body);
+const tip=$('tip');
+function showTip(e,html){tip.innerHTML=html;tip.style.display='block';const x=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8);const y=e.clientY-tip.offsetHeight-12;tip.style.left=x+'px';tip.style.top=(y<4?e.clientY+18:y)+'px'}
+function hideTip(){tip.style.display='none'}
+function bindTips(root){root.querySelectorAll('[data-tip]').forEach(el=>{el.addEventListener('mousemove',e=>showTip(e,el.dataset.tip));el.addEventListener('mouseleave',hideTip)})}
+
+// ---------------------------------------------------------------- filters
+function state(){return{province:$('province').value,district:$('district').value,type:$('ftype').value,facility:$('facility').value,period:$('period').value}}
+function fillDistricts(){
+  const p=geo.provinces.find(p=>p.id===$('province').value);
+  $('district').innerHTML='<option value="">All districts</option>'+(p?p.districts.map(d=>`<option value="${esc(d.id)}">${esc(d.name)}</option>`).join(''):'');
+  $('district').disabled=!p;
+}
+async function fillFacilities(keep){
+  const s=state(),q=new URLSearchParams();
+  if(s.province)q.set('province',s.province);if(s.district)q.set('district',s.district);if(s.type)q.set('type',s.type);
+  try{
+    const r=await fetch(`${API}/facilities?${q}`,{cache:'no-store'});const body=await r.json();
+    const list=body.data.slice().sort((a,b)=>(b.hasData-a.hasData)||a.name.localeCompare(b.name));
+    $('facility').innerHTML=`<option value="">All facilities (${fmt(body.total)})</option>`+list.map(f=>`<option value="${esc(f.id)}">${esc(f.name)}${f.hasData?' · reporting':''}</option>`).join('');
+    if(keep&&list.some(f=>f.id===keep))$('facility').value=keep;
+  }catch{$('facility').innerHTML='<option value="">Facility list unavailable</option>'}
+}
+async function select(change){
+  if(EMBEDDED){parent.postMessage({type:'impilo-set-filters',patch:change},'*');return}
+  // change: {province, district, type, facility} - applied in hierarchy order, children reset.
+  if('province' in change){$('province').value=change.province||'';fillDistricts();$('district').value='';if(!('facility' in change))$('facility').value=''}
+  if('district' in change){$('district').value=change.district||'';if(!('facility' in change))$('facility').value=''}
+  if('type' in change){$('ftype').value=change.type||'';if(!('facility' in change))$('facility').value=''}
+  await fillFacilities(change.facility);
+  if('facility' in change)$('facility').value=change.facility||'';
+  load();
+}
+
+// ---------------------------------------------------------------- charts
+function niceMax(v){const raw=Math.max(v,1)/4;const p=10**Math.floor(Math.log10(raw));const n=raw/p;return Math.max(1,(n<=1?1:n<=2?2:n<=5?5:10)*p)*4}
+function columns(months,values,{height=180,label,partialLast=false}={}){
+  const W=560,H=height,L=40,R=8,T=12,B=24,pw=W-L-R,ph=H-T-B,max=niceMax(Math.max(...values,1));
+  const band=pw/months.length,bw=Math.min(24,band*0.6);let g='';
+  for(let i=0;i<=4;i++){const v=max*i/4,y=T+ph-ph*i/4;g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#edf1f7"/><text class="axis" x="${L-6}" y="${y+3.5}" text-anchor="end">${v>=10000?(v/1000)+'K':fmt(v)}</text>`}
+  months.forEach((m,i)=>{
+    const v=values[i],h=ph*v/max,x=L+band*i+(band-bw)/2,y=T+ph-h,partial=partialLast&&i===months.length-1,r=Math.min(4,h);
+    const path=h>0?`M${x},${T+ph}V${y+r}Q${x},${y} ${x+r},${y}H${x+bw-r}Q${x+bw},${y} ${x+bw},${y+r}V${T+ph}Z`:'';
+    g+=`<g data-tip="${esc(monthLabel(m,true))}${partial?' (partial)':''}: <b>${fmt(v)}</b> ${esc(label)}"><rect x="${L+band*i}" y="${T}" width="${band}" height="${ph}" fill="transparent"/>${path?`<path d="${path}" fill="${partial?'url(#hatch)':'#218a39'}" ${partial?'stroke="#218a39" stroke-width="1"':''}/>`:''}</g>`;
+    if(months.length<=12||i%2===0)g+=`<text class="axis" x="${L+band*i+band/2}" y="${H-6}" text-anchor="middle">${monthLabel(m)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(label)} by month"><defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#cfe9d5"/><line x1="0" y1="0" x2="0" y2="6" stroke="#218a39" stroke-width="2"/></pattern></defs>${g}</svg>`;
+}
+function hbars(items,{sub,click}={}){
+  const max=Math.max(...items.map(i=>i.count),1);
+  return `<div class="hbar">${items.map(i=>`<div class="row${click&&i.key?' click':''}" ${click&&i.key?`data-pick='${esc(JSON.stringify(i.key))}'`:''}${i.region?` data-region="${esc(i.region)}"`:''} data-tip="${esc(i.tip||i.name)}: <b>${fmt(i.count)}</b>">
+    <div class="name" title="${esc(i.name)}">${esc(i.name)}${sub?`<small>${esc(sub(i))}</small>`:''}</div><div class="num">${fmt(i.count)}</div>
+    <div class="track"><div class="fill" style="width:${(i.count/max*100).toFixed(1)}%"></div></div></div>`).join('')}</div>`;
+}
+function meter(label,value,target){const ok=value!=null&&value>=target;return `<div class="meter ${ok?'ok':''}"><div class="top"><span>${esc(label)}</span><b>${value==null?'—':value+'%'}</b></div><div class="track" role="progressbar" aria-label="${esc(label)}" aria-valuenow="${value??0}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${value??0}%"></div></div></div>`}
+function table(headers,rows){return `<details class="table"><summary>Show as table</summary><table class="data"><thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td>${i?fmt(c):esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`}
+function kpi(label,value,detail){return `<div class="kpi"><div class="label">${esc(label)}</div><div class="value">${value}</div><div class="detail">${detail||'&nbsp;'}</div></div>`}
+
+// ---------------------------------------------------------------- map
+function map(d){
+  const s=d.scope,provName=s.province?geo.provinces.find(p=>p.id===s.province)?.name:null;
+  const pts=d.facilities.filter(f=>f.latitude!=null);
+  // Zoom: selected province, else the facilities in scope (district/facility), else the whole country.
+  let box=[0,0,600,552];
+  if(s.level==='district'||s.level==='facility'){
+    const xy=pts.map(f=>project(f.longitude,f.latitude));
+    if(xy.length){const xs=xy.map(p=>p[0]),ys=xy.map(p=>p[1]);box=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}
+    else if(provName)box=BOXES[provName];
+  }else if(provName)box=BOXES[provName];
+  let [x0,y0,x1,y1]=box;const pad=Math.max(12,(x1-x0)*.08,(y1-y0)*.08);x0-=pad;y0-=pad;x1+=pad;y1+=pad;
+  let w=x1-x0,h=y1-y0;const minSize=s.level==='facility'?60:40;if(w<minSize){x0-=(minSize-w)/2;w=minSize}if(h<minSize){y0-=(minSize-h)/2;h=minSize}
+  // The map takes the shape of the area shown (within limits), so tall or wide provinces fill the card.
+  const aspect=Math.min(1.5,Math.max(.6,h/w));if(h/w<aspect){const nh=w*aspect;y0-=(nh-h)/2;h=nh}else{const nw=h/aspect;x0-=(nw-w)/2;w=nw}
+  const k=w/600; // marker sizes stay constant on screen when zoomed
+  const ind=mapIndicator,mode=ind?shadeBy:null,label=indLabel(ind).toLowerCase();
+  const R=mapRegions(d);let maxV=0;
+  if(mode==='province')maxV=Math.max(0,...[...R.province.values()].map(r=>r.value).filter(v=>v!=null));
+  if(mode==='district')maxV=Math.max(0,...[...R.district.values()].map(r=>r.value).filter(v=>v!=null));
+  if(mode==='facility')maxV=Math.max(0,...[...R.facility.values()].filter(v=>v!=null));
+  const fillFor=v=>v==null?'url(#nodata)':RAMP[rampStep(v,maxV)];
+  const reportingLine=r=>r?`<br>${fmt(r.reporting)} of ${fmt(r.facilities)} facilities reporting`:'';
+  // 1. Provinces (shaded in province mode; plain base otherwise).
+  const shapes=PROVINCES.map(p=>{const sel=provName===p.name,r=mode==='province'?R.province.get(p.name):null;
+    const tip=`<b>${esc(p.name)} Province</b>`+(r?`<br>${r.value==null?'No reporting facilities':`${fmt(r.value)} ${esc(label)}`}${reportingLine(r)}`:'')+(s.level==='national'?'<br>Click to view this province':'');
+    return `<path class="prov ${sel&&mode!=='district'?'sel':provName?'dim':''}${r?' choro':''}"${mode==='province'||!mode?` data-region="${esc(p.name)}"`:''} d="${p.d}" data-province="${esc(p.name)}" data-tip="${esc(tip)}" stroke-width="${1.5*k}"${r?` style="fill:${fillFor(r.value)}"`:''}/>`}).join('');
+  // 2. Districts (district mode): official boundaries, value = reporting facilities located inside.
+  let districts='';
+  if(mode==='district'){
+    districts=DIST_GEO.map(g=>{const r=R.district.get(g.name);
+      // A district with no facility in this selection is plain grey (nothing to show), not hatched (no data yet).
+      if(!r)return `<path class="dist" d="${g.d}" fill-rule="evenodd" style="fill:#f1f5f9" stroke="#fff" stroke-width="${.6*k}" data-tip="${esc(`<b>${esc(g.name)}</b> district<br>No facilities in this selection`)}"/>`;
+      const tip=`<b>${esc(g.name)}</b> district<br>${r.value==null?'No reporting facilities':`${fmt(r.value)} ${esc(label)}`}${reportingLine(r)}`;
+      return `<path class="dist choro" data-region="${esc(g.name)}" d="${g.d}" fill-rule="evenodd" style="fill:${fillFor(r.value)}" stroke="#fff" stroke-width="${.6*k}" data-dprov="${esc(r.provinceId||'')}" data-tip="${esc(tip)}"/>`}).join('')
+      +PROVINCES.map(p=>`<path d="${p.d}" fill="none" stroke="#fff" stroke-width="${1.8*k}" pointer-events="none"/>`).join('');
+  }
+  // National view: Harare is too small to hold its name, so it sits just west with a short pointer, and
+  // Mashonaland East's name moves lower in its province so the two don't overlap.
+  const NATIONAL_LABELS={'Mashonaland East':{x:500,y:248},'Harare':{x:426,y:178,anchor:'end',leader:[428,175,441,182]}};
+  const labels=PROVINCES.filter(p=>!provName||p.name===provName&&s.level==='province').map(p=>{
+    const o=!provName&&NATIONAL_LABELS[p.name]||{},x=o.x??p.cx,y=o.y??p.cy;
+    const lead=o.leader?`<line x1="${o.leader[0]}" y1="${o.leader[1]}" x2="${o.leader[2]}" y2="${o.leader[3]}" stroke="#465f88" stroke-width="${.9*k}" pointer-events="none"/>`:'';
+    return `${lead}<text class="provlabel" x="${x}" y="${y}" text-anchor="${o.anchor||'middle'}" style="font-size:${11*k}px;stroke-width:${3*k}px">${esc(p.name)}</text>`}).join('');
+  // 3. Facilities. Facility mode colours reporting facilities by value; other modes keep them as markers.
+  const dot=f=>{const [x,y]=project(f.longitude,f.latitude);const hosp=f.typeGroup==='Hospital';const on=f.hasData;
+    const big=mode==='facility'&&on;
+    const r=(big?7:on?5.5:hosp?3.2:2.4)*k*(s.level==='district'||s.level==='facility'?1.5:1);
+    const v=on&&ind?R.facility.get(f.id):undefined;
+    const tipHtml=`<b>${esc(f.name)}</b><br>${esc(f.typeLabel)} · ${esc(f.district)}, ${esc(f.province)}<br>${on?(ind&&v!=null?`${fmt(v)} ${esc(label)}`:'Reporting to the warehouse'):'Registered · not yet reporting'}`;
+    // Reporting facilities are green; when regions are shaded green they switch to navy so they stay visible.
+    const fill=big?RAMP[rampStep(v??0,maxV)]:on?(ind?'#0b1f3a':'#218a39'):'#8a9bb8';
+    const ring=big?`stroke="#0b1f3a" stroke-width="${1.6*k}"`:`stroke="#fff" stroke-width="${(on?2:.8)*k}"`;
+    // Hospitals: a medical cross (+); clinics: a dot.
+    const Rr=r*1.45,t=Rr*.36;
+    const cross=`M${x-t},${y-Rr}H${x+t}V${y-t}H${x+Rr}V${y+t}H${x+t}V${y+Rr}H${x-t}V${y+t}H${x-Rr}V${y-t}H${x-t}Z`;
+    const shape=hosp?`<path d="${cross}" fill="${fill}" ${ring} stroke-linejoin="round"/>`:`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" ${ring}/>`;
+    const fade=ind&&!on?` opacity="${mode==='facility'?.35:.5}"`:'';
+    // Nationally the dots are too dense to target, so clicks go to the province; inside a province each dot is clickable.
+    if(s.level==='national'&&!on)return `<g style="pointer-events:none"${fade}>${shape}</g>`;
+    return `<g class="fac" data-facility="${esc(f.id)}"${on?` data-region="${esc(f.id)}"`:''} data-tip="${esc(tipHtml)}" style="cursor:pointer"${fade}><circle cx="${x}" cy="${y}" r="${Math.max(r*1.8,5*k)}" fill="transparent"/>${shape}</g>`};
+  // Draw order: clinics, then hospitals (so crosses aren't hidden under dots), then reporting facilities on top.
+  const ordered=[...pts.filter(f=>!f.hasData&&f.typeGroup!=='Hospital'),...pts.filter(f=>!f.hasData&&f.typeGroup==='Hospital'),...pts.filter(f=>f.hasData)];
+  // Names only without shading; with an indicator the map stays clean and details are in the hover.
+  const reportLabels=ind?'':pts.filter(f=>f.hasData).map(f=>{const [x,y]=project(f.longitude,f.latitude);return `<text x="${x+9*k}" y="${y-7*k}" style="font-size:${11.5*k}px;font-weight:700;fill:#0b1f3a;paint-order:stroke;stroke:#fff;stroke-width:${3.5*k}px;pointer-events:none">${esc(f.name)}</text>`}).join('');
+  const missing=d.facilities.length-pts.length;
+  // Shading by province or district shows only boundaries and colour; facility markers appear without shading or in facility mode.
+  const showDots=!mode||mode==='facility';
+  const hatch=`<defs><pattern id="nodata" width="${4*k}" height="${4*k}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${4*k}" height="${4*k}" fill="#f8fafc"/><line x1="0" y1="0" x2="0" y2="${4*k}" stroke="#e2e8f0" stroke-width="${2*k}"/></pattern></defs>`;
+  const rampLegend=ind?`<div class="legend"><span><b style="color:var(--ink)">${esc(indLabel(ind))}</b></span><span class="ramp">Lower ${RAMP.map(c=>`<i style="background:${c}"></i>`).join('')} Higher</span>${mode==='facility'?'':'<span><i class="nodata"></i>No reporting facilities</span>'}<span>Hover for figures</span></div>`:'';
+  return `<div class="mapbox"><svg viewBox="${x0} ${y0} ${w} ${h}" role="img" aria-label="Map of facilities in ${esc(s.label)}${ind?' shaded by '+esc(label)+' per '+mode:''}">${hatch}${shapes}${districts}${showDots?ordered.map(dot).join(''):''}${labels}${reportLabels}</svg></div>
+    ${rampLegend}${showDots?`<div class="legend"><span><i class="sw on"${ind?' style="background:#0b1f3a;box-shadow:0 0 0 2px #fff,0 0 0 3px #0b1f3a"':''}></i>Reporting to the warehouse</span><span><i class="sw"></i>Clinic, not yet reporting</span><span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4,0H8V4H12V8H8V12H4V8H0V4H4Z" fill="#8a9bb8"/></svg>Hospital, not yet reporting</span></div>`:''}
+    <div class="sub" style="margin-top:6px">${showDots?`${fmt(pts.length)} facilities placed on the map${missing?` · ${fmt(missing)} have no location in the registry and can't be mapped`:''} · `:mode==='district'&&missing?`${fmt(missing)} facilities have no location, so they can't be counted in a district · `:''}Boundaries: geoBoundaries (CC BY 4.0)</div>`;
+}
+// Values per map region for the selected indicator. Province mode uses the API's province totals (or the
+// selection total inside a province); district mode sums reporting facilities located inside each official
+// district boundary; facility mode uses each reporting facility's own value. null = no reporting facility.
+function mapRegions(d){
+  const ind=mapIndicator,facVals=new Map((d.byFacility||[]).map(f=>[f.id,f.values?.[ind]??0]));
+  const province=new Map(),district=new Map(),facility=new Map();
+  if(!ind)return{province,district,facility};
+  for(const f of d.facilities)if(f.hasData)facility.set(f.id,facVals.has(f.id)?facVals.get(f.id):null);
+  if(d.scope.level==='national'&&d.byArea){for(const a of d.byArea.areas)province.set(a.name,{value:a.values?.[ind]??null,facilities:a.facilities,reporting:a.reporting})}
+  else if(d.scope.province){const n=geo.provinces.find(p=>p.id===d.scope.province)?.name;province.set(n,{value:d.indicators?d.indicators.series[ind].total:null,facilities:d.coverage.facilities,reporting:d.coverage.reporting})}
+  const provCount={};
+  for(const f of d.facilities){const g=mapDistrictOf(f);if(!g)continue;
+    const r=district.get(g)||{value:null,facilities:0,reporting:0,provinceId:null};r.facilities++;
+    (provCount[g]=provCount[g]||{})[f.provinceId]=(provCount[g][f.provinceId]||0)+1;
+    if(f.hasData){r.reporting++;r.value=(r.value||0)+(facVals.get(f.id)||0)}district.set(g,r)}
+  for(const [g,r] of district)r.provinceId=Object.entries(provCount[g]||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
+  return{province,district,facility};
+}
+// Official district boundaries for point-in-polygon lookups (ray casting, even-odd, so urban holes work).
+const DIST_GEO=DISTRICTS.map(g=>{const rings=[...g.d.matchAll(/M([^Z]+)Z/g)].map(m=>m[1].split('L').map(p=>p.split(',').map(Number)));const xs=rings.flat().map(p=>p[0]),ys=rings.flat().map(p=>p[1]);return{...g,rings,box:[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]}});
+function inRings(x,y,rings){let c=false;for(const r of rings)for(let i=0,j=r.length-1;i<r.length;j=i++){const [x1,y1]=r[i],[x2,y2]=r[j];if((y1>y)!==(y2>y)&&x<(x2-x1)*(y-y1)/(y2-y1)+x1)c=!c}return c}
+const districtCache=new Map();
+function mapDistrictOf(f){
+  if(f.latitude==null)return null;if(districtCache.has(f.id))return districtCache.get(f.id);
+  const [x,y]=project(f.longitude,f.latitude);let found=null;
+  for(const g of DIST_GEO){if(x<g.box[0]||x>g.box[2]||y<g.box[1]||y>g.box[3])continue;if(inRings(x,y,g.rings)){found=g.name;break}}
+  districtCache.set(f.id,found);return found;
+}
+
+// ---------------------------------------------------------------- page
+function facilityList(list){
+  const max=150,shown=list.slice().sort((a,b)=>(b.hasData-a.hasData)||a.name.localeCompare(b.name)).slice(0,max);
+  return `<div class="card"><h2>Facilities in this selection</h2><div class="sub">${fmt(list.length)} facilities${list.length>max?` · showing the first ${max}; pick a district or type to narrow`:''}</div>
+   <table class="data"><thead><tr><th>Facility</th><th style="text-align:left">Type</th><th style="text-align:left">District</th><th style="text-align:left">Map location</th><th>Status</th></tr></thead><tbody>
+   ${shown.map(f=>`<tr class="click" data-facility="${esc(f.id)}"><td class="name">${esc(f.name)}</td><td style="text-align:left">${esc(f.typeLabel)}</td><td style="text-align:left">${esc(f.district)}</td><td style="text-align:left">${f.latitude!=null?'Recorded':'—'}</td><td>${f.hasData?'<span class="pill on">Reporting</span>':'<span class="pill no">Not yet</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function facilityCard(f,p){
+  const has=f.latitude!=null,bbox=has?[f.longitude-.012,f.latitude-.008,f.longitude+.012,f.latitude+.008].join(','):'';
+  return `<div class="card grid2" style="align-items:stretch"><div>
+    <span class="pill ${f.hasData?'on':'off'}">${f.hasData?'Reporting to the warehouse':'Registered · not yet reporting'}</span>
+    <h1 style="font-size:22px;font-weight:800;margin:8px 0 2px">${esc(f.name)}</h1><div class="sub">${esc(f.typeLabel)} · ${esc(f.district)}, ${esc(f.province)} Province</div>
+    <dl class="facts"><dt>Facility ID</dt><dd>${esc(f.id)}</dd><dt>Type</dt><dd>${esc(f.typeLabel)} <span class="sub" style="font-weight:400">(${esc(f.typeSource==='manual'?'set manually':f.typeSource==='known list'?'from known hospital list':f.typeSource==='name'?'from facility name':'from facility code')})</span></dd>
+    <dt>Latitude</dt><dd>${has?f.latitude.toFixed(4):'Not recorded'}</dd><dt>Longitude</dt><dd>${has?f.longitude.toFixed(4):'Not recorded'}</dd>
+    ${f.hasData?`<dt>Data available to</dt><dd>${dayLabel(p.latestDataDate)}</dd>`:''}</dl></div>
+    <div class="osm">${has?`<iframe title="Map of ${esc(f.name)}" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${f.latitude},${f.longitude}"></iframe><div class="fallback">${f.latitude.toFixed(4)}, ${f.longitude.toFixed(4)} · map needs an internet connection · © OpenStreetMap contributors</div>`:'<div class="status">No location recorded in the facility registry.</div>'}</div></div>`;
+}
+function activity(d){
+  const ind=d.indicators,p=d.period,c=d.coverage;
+  if(!ind){
+    const first=geo.dataFacilities[0];
+    return `<div class="card empty"><h3>No activity data for this selection yet</h3>
+      <p>None of the ${fmt(c.facilities)} ${c.facilities===1?'facility':'facilities'} in ${esc(d.scope.level==='national'?'Zimbabwe':d.scope.path[d.scope.path.length-1]+(d.scope.level==='province'?' Province':''))}${d.scope.typeLabel?' ('+esc(d.scope.typeLabel.toLowerCase())+')':''} send${c.facilities===1?'s':''} data to the national warehouse yet.
+      ${first?`So far only <b>${esc(first.name)}</b> (${esc(first.district)}, ${esc(first.province)}) is reporting.`:''} Activity will appear here as more facilities are connected.</p>
+      ${first?`<button class="btn" type="button" data-facility="${esc(first.id)}">View ${esc(first.name)}</button>`:''}</div>`;
+  }
+  const k=ind.kpis,mo=ind.monthly,partial=p.partialLastMonth;
+  const multiples=[['OPD General visits',mo.opd],['HIV tests (HTS)',mo.hts],['ANC registrations',mo.anc]];
+  return `
+  <div class="tiles k8">
+    ${kpi('Attendances',fmt(k.attendances),`${fmt(k.uniquePatients)} different patients`)}
+    ${kpi('OPD General visits',fmt(k.opdVisits),'Outpatients aged 5 and over')}
+    ${kpi('HIV tests (HTS)',fmt(k.htsTests),`${fmt(k.htsPositive)} positive · ${k.htsPositivity??'—'}% positivity`)}
+    ${kpi('ANC registrations',fmt(k.ancBookings),`${fmt(k.ancFirstBookings)} first bookings`)}
+    ${kpi('New on ART',fmt(k.artNew),'ART register entries')}
+    ${kpi('TB registrations',fmt(k.tbRegistered),'DS-DR TB register')}
+    ${kpi('Malaria tests',fmt(k.malariaTests),`${fmt(k.malariaPositive)} positive${k.malariaPositivity!=null?' · '+k.malariaPositivity+'% positivity':''}`)}
+    ${kpi('Deliveries',fmt(k.deliveries),k.deliveries?'':'No deliveries recorded')}
+  </div>
+  <div class="grid3">
+    <div class="card"><h2>Attendances by month</h2><div class="sub">One entry per patient per day${partial?' · hatched month is incomplete':''}</div>
+      ${columns(mo.months,mo.attendance,{height:220,label:'attendances',partialLast:partial})}
+      ${table(['Month','Attendances','OPD General','HTS','ANC'],mo.months.map((m,i)=>[monthLabel(m,true),mo.attendance[i],mo.opd[i],mo.hts[i],mo.anc[i]]))}</div>
+    <div class="card"><h2>Who attended</h2><div class="sub">Attendances by age group</div>
+      ${hbars(ind.ageBands.filter(a=>a.label!=='Unknown'||a.count).map(a=>({name:a.label==='Unknown'?'Age not recorded':a.label+' years',count:a.count})))}
+      <div class="sub" style="margin-top:16px">By sex</div>${hbars(ind.sex.map(s=>({name:s.label.charAt(0)+s.label.slice(1).toLowerCase(),count:s.count})))}</div>
+  </div>
+  <div class="card"><h2>Programme activity by month</h2><div class="sub">Each chart has its own scale</div>
+    <div class="multiples">${multiples.map(([t,v])=>`<div><h3>${t}<span>${fmt(v.reduce((a,b)=>a+b,0))} in period</span></h3>${columns(mo.months,v,{height:130,label:t.toLowerCase(),partialLast:partial})}</div>`).join('')}
+      <div><h3>Records per register<span>this period</span></h3>${hbars(ind.registers.map(r=>({name:r.name,count:r.total})))}</div></div></div>
+  <div class="grid2">
+    <div class="card"><h2>Top 10 diagnoses</h2><div class="sub">Recorded diagnoses in the period (ICD-10 and local codes)</div>
+      ${ind.topDiagnoses.length?hbars(ind.topDiagnoses,{sub:i=>i.code}):'<div class="status">No diagnoses recorded in this period.</div>'}</div>
+    <div class="card"><h2>Record completeness</h2><div class="sub">Share of attendances with each item recorded · green at 80% or more</div>
+      ${meter('Diagnosis recorded',ind.dataCompleteness.diagnosisRecorded,80)}${meter('Medication recorded',ind.dataCompleteness.medicationRecorded,80)}
+      ${meter('TB screening recorded',ind.dataCompleteness.tbScreeningRecorded,80)}${meter('Blood pressure recorded',ind.dataCompleteness.bloodPressureRecorded,80)}</div>
+  </div>`;
+}
+
+// Beside the map: the selected indicator by month, by sex, and by age group and sex (population pyramid).
+// It follows the same filters as the map. With "Facilities only" it lists facility counts by area instead.
+const MALE_ICON=(c,sz=34)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.2" r="2.7" fill="${c}"/><path d="M8.2 8.2h7.6a1.6 1.6 0 0 1 1.6 1.6v5.4a1 1 0 0 1-2 0v-4.1h-.6V22a1.2 1.2 0 0 1-2.4 0v-6.4h-.8V22a1.2 1.2 0 0 1-2.4 0V11.1h-.6v4.1a1 1 0 0 1-2 0V9.8a1.6 1.6 0 0 1 1.6-1.6z" fill="${c}"/></svg>`;
+const FEMALE_ICON=(c,sz=34)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.2" r="2.7" fill="${c}"/><path d="M9.6 8.2h4.8a1.6 1.6 0 0 1 1.55 1.2l1.9 6.3a.9.9 0 0 1-1.7.55l-1.35-4.1h-.4l2.2 7.3h-2.4V22a1.1 1.1 0 0 1-2.2 0v-2.55h-.9V22a1.1 1.1 0 0 1-2.2 0v-2.55H6.6l2.2-7.3h-.4l-1.35 4.1a.9.9 0 0 1-1.7-.55l1.9-6.3A1.6 1.6 0 0 1 9.6 8.2z" fill="${c}"/></svg>`;
+const MALE='#0d9488',FEMALE='#d99a00';
+function rankingCard(d){
+  const ind=mapIndicator,s=d.scope,label=indLabel(ind);
+  if(!ind){
+    const rows=(s.level==='national'?d.coverage.byProvince:d.coverage.byDistrict||d.coverage.byProvince).map(a=>({name:a.name,count:a.facilities,region:s.level==='national'?a.name:undefined,
+      key:s.level==='national'?{province:a.id}:{province:s.province,district:a.id},tip:`${a.name} · ${fmt(a.hospitals)} hospitals, ${fmt(a.clinics)} clinics, ${fmt(a.reporting)} reporting`})).sort((x,y)=>y.count-x.count);
+    return `<div class="card"><h2>Facilities by ${s.level==='national'?'province':'district'}</h2><div class="sub">Click to drill down</div><div class="ranking">${hbars(rows,{click:true})}</div></div>`;
+  }
+  const series=d.indicators?.series?.[ind],p=d.period;
+  if(!series)return `<div class="card"><h2>${esc(label)}</h2><div class="status">No facility in this selection reports data yet.</div></div>`;
+  const sx=series.sex,known=sx.male+sx.female,pc=n=>known?Math.round(n/known*100):0;
+  const pyr=series.pyramid,maxP=Math.max(1,...pyr.map(b=>Math.max(b.male,b.female)));
+  const pyramid=`<div class="pyr" role="img" aria-label="${esc(label)} by age group and sex">
+    <div class="head"><span style="color:${MALE}">Male</span><span></span><span style="color:#8a5a00">Female</span></div>
+    ${pyr.slice().reverse().map(b=>`<div class="r" data-tip="${esc(`<b>Age ${b.band}</b><br>Male: ${fmt(b.male)}<br>Female: ${fmt(b.female)}`)}">
+      <div class="m"><div class="b" style="width:${(b.male/maxP*100).toFixed(1)}%"></div></div><div class="age">${b.band}</div><div class="f"><div class="b" style="width:${(b.female/maxP*100).toFixed(1)}%"></div></div></div>`).join('')}
+    <div class="axis2"><span style="display:flex;justify-content:space-between"><span>${fmt(maxP)}</span><span>0</span></span><span></span><span style="display:flex;justify-content:space-between"><span>0</span><span>${fmt(maxP)}</span></span></div></div>`;
+  const notes=[sx.other?`${fmt(sx.other)} with sex not recorded or other`:'',series.ageUnknown?`${fmt(series.ageUnknown)} with age not recorded`:''].filter(Boolean).join(' · ');
+  return `<div class="card"><h2>${esc(label)}</h2><div class="sub">${fmt(series.total)} in ${esc(s.path[s.path.length-1])} · ${dayLabel(p.from)} – ${dayLabel(p.to)}</div>
+    <div class="panel-h">By month</div>${columns(d.indicators.monthly.months,series.monthly,{height:130,label:label.toLowerCase(),partialLast:p.partialLastMonth})}
+    <div class="panel-h">By sex</div>
+    <div class="sexrow">
+      <div class="sexbox" data-tip="Male: <b>${fmt(sx.male)}</b> (${pc(sx.male)}%)">${MALE_ICON(MALE)}<div><div class="v">${fmt(sx.male)}</div><div class="l">Male · ${pc(sx.male)}%</div></div></div>
+      <div class="sexbox" data-tip="Female: <b>${fmt(sx.female)}</b> (${pc(sx.female)}%)">${FEMALE_ICON(FEMALE)}<div><div class="v">${fmt(sx.female)}</div><div class="l">Female · ${pc(sx.female)}%</div></div></div>
+    </div>
+    ${known?`<div class="split" aria-hidden="true"><div style="flex:${sx.male};background:${MALE}"></div><div style="flex:${sx.female};background:${FEMALE}"></div></div>`:''}
+    <div class="panel-h">By age group and sex</div>${pyramid}
+    ${notes?`<div class="muted-list" style="margin-top:8px">${esc(notes)}</div>`:''}</div>`;
+}
+// Below the map: the selected indicator month by month.
+function trendCard(d){
+  const ind=mapIndicator;if(!ind)return '';
+  const label=indLabel(ind),series=d.indicators?.series?.[ind],p=d.period;
+  return `<div class="card"><h2>${esc(label)} by month</h2>${series?`<div class="sub">${fmt(series.total)} in the period${p.partialLastMonth?' · hatched month is incomplete':''}</div>${columns(d.indicators.monthly.months,series.monthly,{height:180,label:label.toLowerCase(),partialLast:p.partialLastMonth})}`
+    :'<div class="status">No facility in this selection reports data yet.</div>'}</div>`;
+}
+function render(d){
+  current=d;
+  if(d.scope.level==='facility'&&d.facility&&$('province').value!==(d.facility.provinceId||'')){$('province').value=d.facility.provinceId||'';fillDistricts();$('district').value=d.facility.districtId||''}const s=d.scope,c=d.coverage,p=d.period;
+  const crumbs=[['Zimbabwe',{province:'',type:s.type||''}]];
+  if(s.level==='facility'&&d.facility){const f=d.facility;crumbs.push([f.province,{province:f.provinceId||''}]);if(f.districtId)crumbs.push([f.district,{province:f.provinceId||'',district:f.districtId}]);crumbs.push([f.name,null])}
+  else{if(s.province)crumbs.push([s.path[1],s.district?{province:s.province}:null]);if(s.district)crumbs.push([s.path[2],null])}
+  crumbs[crumbs.length-1][1]=null;
+  const crumbHtml=crumbs.map(([n,t],i)=>(i?'<span class="sep">›</span>':'')+(t?`<button type="button" data-crumb='${esc(JSON.stringify(t))}'>${esc(n)}</button>`:`<span class="here">${esc(n)}</span>`)).join('');
+  const title=s.level==='national'?'Zimbabwe — national overview':s.path[s.path.length-1]+(s.level==='province'?' Province':'');
+  const hospitalsDetail=c.byType.filter(t=>t.group==='Hospital'&&t.facilities).map(t=>`${fmt(t.facilities)} ${t.label.replace(' hospital','').toLowerCase()}`).join(' · ');
+  const reportingNames=d.reportingFacilities.map(f=>`<span class="pill on">${esc(f.name)} · ${esc(f.district)}</span>`).join('');
+  $('content').innerHTML=`<div class="wrap">
+    <div class="card scopehead"><div><div class="crumbs">${crumbHtml}</div><h1>${esc(title)}</h1>
+      <div class="sub">${s.typeLabel?esc(s.typeLabel)+' · ':''}${dayLabel(p.from)} – ${dayLabel(p.to)}${p.partialLastMonth?` · ${monthLabel(p.to.slice(0,7),true)} is partial (data ends ${dayLabel(p.latestDataDate)})`:''}</div></div>
+</div>
+    ${s.level==='facility'&&d.facility?facilityCard(d.facility,p):''}
+    ${s.level!=='facility'?`<div class="tiles">
+      ${kpi('Facilities in selection',fmt(c.facilities),s.level==='national'?`${geo.provinces.length} provinces · ${fmt(geo.provinces.reduce((a,p)=>a+p.districts.length,0))} districts`:'')}
+      ${kpi('Hospitals',fmt(c.hospitals),hospitalsDetail||'None in this selection')}
+      ${kpi('Clinics',fmt(c.clinics),'Clinics, polyclinics and health centres')}
+      ${kpi('Reporting to the warehouse',`${fmt(c.reporting)}<span style="font-size:15px;color:var(--muted)"> of ${fmt(c.facilities)}</span>`,`${pct(c.reporting,c.facilities)} of facilities connected`)}
+      ${kpi('With map location',fmt(c.withCoordinates),`${pct(c.withCoordinates,c.facilities)} have coordinates`)}
+    </div>
+    <div class="mapgrid">
+      <div class="card"><div class="maphead"><div><h2>${mapIndicator?esc(indLabel(mapIndicator))+' by '+shadeBy:'Facility map'}</h2><div class="sub">${s.level==='national'?'Click a province to zoom in · hover for figures':'Hover for figures · click a facility to open it'}</div></div>
+        <div class="mapctl"><div><label for="mapIndicator">Show on map</label><select id="mapIndicator">${MAP_INDICATORS.map(([v,l])=>`<option value="${v}"${v===mapIndicator?' selected':''}>${esc(l)}</option>`).join('')}</select></div>
+        <div><label>Shade by</label><div class="seg" role="group" aria-label="Shade by">${[['province','Province'],['district','District'],['facility','Facility']].map(([v,l])=>`<button type="button" data-shade="${v}" aria-pressed="${shadeBy===v}"${mapIndicator?'':' disabled'}>${l}</button>`).join('')}</div></div></div></div>${map(d)}</div>
+      ${rankingCard(d)}
+    </div>`:''}
+    <div class="section"><h2>${s.level==='facility'?'Facility activity':'Activity from reporting facilities'}</h2><div class="chips">${reportingNames}</div></div>
+    ${activity(d)}
+    ${s.level!=='facility'&&(s.level!=='national'||s.type)?facilityList(d.facilities):''}
+    <div class="foot">Facility list: national facility registry (${fmt(geo.totalFacilities)} facilities). Facility types are derived from facility names, codes and the list of central and provincial hospitals until the official MoHCC classification is loaded.
+      Activity: reporting tables of facilities connected to the warehouse, using the same rules as the registers, so totals match the register pages for the same dates.</div>
+  </div>`;
+  const root=$('content');bindTips(root);
+  // Hovering an area on the map or its row in the ranking highlights both; map areas get a navy outline
+  // drawn on top so neighbours can't hide the edge.
+  let outline=null;
+  const highlight=(key,on)=>{
+    root.querySelectorAll('.ranking [data-region]').forEach(r=>r.classList.toggle('hot',on&&r.dataset.region===key));
+    outline?.remove();outline=null;if(!on)return;
+    const el=[...root.querySelectorAll('.mapbox [data-region]')].find(e=>e.dataset.region===key);if(!el)return;
+    const svg=el.ownerSVGElement;
+    if(el.tagName==='path'){outline=document.createElementNS('http://www.w3.org/2000/svg','path');outline.setAttribute('d',el.getAttribute('d'));outline.setAttribute('fill','none');outline.setAttribute('fill-rule','evenodd')}
+    else{const c=el.querySelector('circle:last-child,path');if(!c)return;const bb=c.getBBox();outline=document.createElementNS('http://www.w3.org/2000/svg','circle');outline.setAttribute('cx',bb.x+bb.width/2);outline.setAttribute('cy',bb.y+bb.height/2);outline.setAttribute('r',bb.width);outline.setAttribute('fill','none')}
+    outline.setAttribute('stroke','#0b1f3a');outline.setAttribute('stroke-width','2');outline.setAttribute('stroke-linejoin','round');
+    outline.setAttribute('vector-effect','non-scaling-stroke');outline.setAttribute('pointer-events','none');svg.appendChild(outline);
+  };
+  root.querySelectorAll('.mapbox path.prov, .mapbox path.dist').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{if(el.dataset.region)highlight(el.dataset.region,true);else{highlight(null,false);outline=document.createElementNS('http://www.w3.org/2000/svg','path');outline.setAttribute('d',el.getAttribute('d'));outline.setAttribute('fill','none');outline.setAttribute('stroke','#0b1f3a');outline.setAttribute('stroke-width','2');outline.setAttribute('vector-effect','non-scaling-stroke');outline.setAttribute('pointer-events','none');el.ownerSVGElement.appendChild(outline)}});
+    el.addEventListener('mouseleave',()=>highlight(null,false));
+  });
+  root.querySelectorAll('.mapbox g.fac[data-region], .ranking [data-region]').forEach(el=>{
+    el.addEventListener('mouseenter',()=>highlight(el.dataset.region,true));
+    el.addEventListener('mouseleave',()=>highlight(null,false));
+  });
+  $('mapIndicator')?.addEventListener('change',e=>{mapIndicator=e.target.value;try{localStorage.setItem('impilo.mapIndicator',mapIndicator)}catch{};render(current)});
+  root.querySelectorAll('[data-shade]').forEach(b=>b.addEventListener('click',()=>{shadeBy=b.dataset.shade;try{localStorage.setItem('impilo.mapShadeBy',shadeBy)}catch{};render(current)}));
+  root.querySelectorAll('path.dist[data-dprov]').forEach(el=>el.addEventListener('click',()=>{if(el.dataset.dprov&&current.scope.level==='national')select({province:el.dataset.dprov})}));
+  root.querySelectorAll('[data-province]').forEach(el=>el.addEventListener('click',()=>{const name=el.dataset.province;const id=el.tagName==='TR'?el.dataset.province:geo.provinces.find(p=>p.name===name)?.id;if(id)select({province:id})}));
+  root.querySelectorAll('tr[data-district]').forEach(el=>el.addEventListener('click',()=>{if(el.dataset.district)select({province:$('province').value||current.facilities.find(f=>f.districtId===el.dataset.district)?.provinceId||'',district:el.dataset.district})}));
+  root.querySelectorAll('[data-facility]').forEach(el=>el.addEventListener('click',()=>{const f=current.facilities.find(x=>x.id===el.dataset.facility)||geo.dataFacilities.find(x=>x.id===el.dataset.facility);openFacility(el.dataset.facility,f)}));
+  root.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>select(JSON.parse(el.dataset.pick))));
+  root.querySelectorAll('[data-crumb]').forEach(el=>el.addEventListener('click',()=>{const t=JSON.parse(el.dataset.crumb);select({province:t.province||'',district:t.district||'',facility:''})}));
+  postHeight();
+}
+function openFacility(id,f){
+  const provinceId=f?.provinceId||geo.provinces.find(p=>p.name===f?.province)?.id||'';
+  select({province:provinceId,district:f?.districtId||'',type:'',facility:id});
+}
+
+function monthsBack(dateStr,n){let y=+dateStr.slice(0,4),m=+dateStr.slice(5,7)-(n-1);while(m<1){m+=12;y--}return `${y}-${String(m).padStart(2,'0')}-01`}
+async function load(){
+  const seq=++requestSeq; // only the newest request may draw, so a slow older one can't overwrite it
+  const s=state(),q=new URLSearchParams();
+  for(const k of ['province','district','type','facility'])if(s[k])q.set(k,s[k]);
+  if(EMBEDDED&&globalFilters?.resolved){q.set('from',globalFilters.resolved.from);q.set('to',globalFilters.resolved.to)}
+  else if(s.period==='custom'){if($('from').value)q.set('from',$('from').value);if($('to').value)q.set('to',$('to').value)}
+  else if(latestDate){q.set('from',monthsBack(latestDate,+s.period));q.set('to',latestDate)}
+  $('content').style.opacity=.5;
+  try{
+    const r=await fetch(`${API}/dashboard?${q}`,{cache:'no-store'});const body=await r.json().catch(()=>({}));
+    if(seq!==requestSeq)return;
+    if(!r.ok)throw Error(body.detail||`The API returned ${r.status}`);
+    latestDate=body.period.latestDataDate;render(body);
+  }catch(e){if(seq!==requestSeq)return;$('content').innerHTML=`<div class="card status error">Could not load the dashboard: ${esc(e.message)}<br><small>Check that the API is running (start.cmd) at ${API}.</small></div>`;postHeight()}
+  if(seq===requestSeq)$('content').style.opacity=1;
+}
+async function applyGlobal(){
+  const f=globalFilters.filters;
+  $('province').value=f.province||'';fillDistricts();$('district').value=f.district||'';$('ftype').value=f.type||'';
+  await fillFacilities(f.facility);$('facility').value=f.facility||'';
+  load();
+}
+window.addEventListener('message',e=>{
+  if(e.source!==window.parent||!e.data||e.data.type!=='impilo-filters')return;
+  globalFilters=e.data;if(geoReady)applyGlobal();
+});
+async function init(){
+  try{
+    const [g,f]=await Promise.all([fetch(`${API}/geography`,{cache:'no-store'}),fetch(`${API}/facilities`,{cache:'no-store'})]);
+    if(!g.ok||!f.ok)throw Error('The facility registry is not available. Run update.cmd, then reload.');
+    geo=await g.json();const all=await f.json();
+    geo.totalFacilities=all.total;geo.dataFacilities=all.data.filter(x=>x.hasData);
+    $('province').innerHTML='<option value="">All provinces</option>'+geo.provinces.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    geoReady=true;
+    if(EMBEDDED){if(globalFilters)applyGlobal();else{parent.postMessage({type:'impilo-filters-request'},'*');$('content').innerHTML='<div class="card status">Waiting for the portal filters…</div>'}return}
+    await fillFacilities();load();
+  }catch(e){$('content').innerHTML=`<div class="card status error">${esc(e.message)}</div>`;postHeight()}
+}
+$('province').addEventListener('change',()=>select({province:$('province').value}));
+$('district').addEventListener('change',()=>select({district:$('district').value}));
+$('ftype').addEventListener('change',()=>select({type:$('ftype').value}));
+$('facility').addEventListener('change',()=>{const id=$('facility').value;if(!id){load();return}const f=current?.facilities.find(x=>x.id===id);openFacility(id,f)});
+$('period').addEventListener('change',()=>{const custom=$('period').value==='custom';$('customDates').style.display=custom?'flex':'none';if(!custom)load()});
+$('apply').addEventListener('click',load);
+$('reset').addEventListener('click',()=>{$('ftype').value='';$('period').value='12';$('customDates').style.display='none';select({province:'',type:''})});
+init();
+</script>
+</body>
+</html>

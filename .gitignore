@@ -1,0 +1,21 @@
+# Patient data and the local database - never publish
+data/
+backups/
+*.sql.gz
+data/*.sql
+
+# Passwords, logins and local settings
+api/.env
+.env
+config/
+api/auth-data/
+api/ai-data/
+
+# Generated / machine-specific
+api/.venv/
+.venv/
+__pycache__/
+*.pyc
+run/
+logs/
+*.new

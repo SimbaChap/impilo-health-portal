@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="./auth.js?v=1"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ask the data</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0b1f3a;--ink2:#465f88;--muted:#637797;--line:#e3e9f3;--grid:#edf1f7;--green:#218a39;--green-dark:#176c2b;--green-bg:#ecf7ee;--gold:#d99a00;--rose:#c62f2f;--rose-bg:#fdecec}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--ink);font-family:Inter,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+h1,h2,h3{font-family:"Plus Jakarta Sans",Inter,sans-serif;margin:0}
+button,input,select,textarea{font:inherit}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 10px 25px -18px rgba(11,31,58,.25)}
+.card h2{font-size:15px;font-weight:700}
+.sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+.wrap{display:grid;gap:16px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected=true]{color:var(--green-dark);border-bottom-color:var(--green)}
+.btn{font-size:13px;font-weight:600;border-radius:9px;padding:8px 14px;border:1px solid var(--green);background:var(--green);color:#fff;cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--green-dark)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:#fff;color:var(--green)}.btn.ghost:hover:not(:disabled){background:var(--green-bg)}
+.btn.danger{background:#fff;color:var(--rose);border-color:#f3c6c6}.btn.danger:hover:not(:disabled){background:var(--rose-bg)}
+.btn.sm{padding:5px 10px;font-size:12px}
+input[type=text],input[type=number],select,textarea{border:1px solid #d7dfec;border-radius:9px;background:#f8fafc;color:var(--ink);padding:8px 10px;font-size:13px;width:100%}
+textarea{resize:vertical;min-height:70px;line-height:1.45}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--ink2);margin:12px 0 5px}
+.help{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.pill.on{background:var(--green-bg);color:var(--green-dark)}.pill.off{background:#f1f5f9;color:var(--muted)}.pill.bad{background:var(--rose-bg);color:#b42318}.pill.warn{background:#fdf1d6;color:#8a5a00}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.notice{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5}
+.notice.info{background:#f4f8fd;border:1px solid #dbe6f5}.notice.warn{background:#fffaf0;border:1px solid #f4e2b8}.notice.bad{background:var(--rose-bg);border:1px solid #f3c6c6;color:#8f1d1d}.notice.ok{background:var(--green-bg);border:1px solid #cfe9d5}
+.notice a,.linkbtn{color:var(--green-dark);font-weight:600;cursor:pointer;background:none;border:0;padding:0;text-decoration:underline}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;color:var(--ink2);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--grid);vertical-align:middle}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+/* ask: WhatsApp-style chat with saved conversations */
+.ask-mode body,.ask-mode html{background:transparent}
+.ask-mode .card.shell{padding:0;overflow:hidden}
+.wa{display:grid;grid-template-columns:300px 1fr;height:720px;border-radius:16px;overflow:hidden;background:#fff}
+.wa-list{border-right:1px solid #e9edef;display:flex;flex-direction:column;min-height:0;background:#fff}
+.wa-list-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#f0f2f5;border-bottom:1px solid #e9edef}
+.wa-list-head h2{font-size:16px}
+.wa-new{border:0;background:var(--green);color:#fff;border-radius:999px;padding:7px 13px;font-weight:600;font-size:12.5px;cursor:pointer}
+.wa-new:hover{background:var(--green-dark)}
+.wa-search{padding:8px 12px;border-bottom:1px solid #f0f2f5}
+.wa-search input{border-radius:9px;background:#f0f2f5;border:0;padding:8px 12px}
+.wa-chats{overflow:auto;flex:1}
+.wa-chat{display:flex;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid #f2f4f5;cursor:pointer;position:relative}
+.wa-chat:hover{background:#f5f6f6}.wa-chat.on{background:#f0f2f5}
+.wa-chat .t{flex:1;min-width:0}
+.wa-chat .t b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-chat .t span{display:block;font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.wa-chat .when{font-size:11px;color:#667781;align-self:flex-start;margin-top:2px}
+.wa-chat .del{position:absolute;right:10px;bottom:8px;border:0;background:none;color:#b42318;font-size:11px;cursor:pointer;display:none}
+.wa-chat:hover .del,.wa-chat .del.confirm{display:block}
+.wa-filter{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #f0f2f5}
+.wa-filter button{display:inline-flex;align-items:center;gap:5px;border:0;background:#f0f2f5;color:#54656f;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
+.wa-filter button[aria-selected=true]{background:#e7f6ea;color:var(--green-dark)}
+.wa-filter svg{width:14px;height:14px}
+.wa-sec{display:flex;align-items:center;gap:6px;padding:10px 16px 4px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667781}
+.wa-sec svg{width:13px;height:13px}
+.wa-chat .side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;align-self:stretch}
+.star{border:0;background:none;padding:2px;cursor:pointer;line-height:0;border-radius:6px;opacity:.55}
+.wa-chat:hover .star,.star.on{opacity:1}.star:hover{background:#eef1f3}
+.star.big{opacity:1;padding:6px}.star.big svg{width:21px;height:21px}
+.wa-chat .del{bottom:8px;right:40px}
+.wa-empty-list{padding:24px 18px;color:#667781;font-size:13px;line-height:1.5}
+.avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.avatar svg{width:22px;height:22px}
+.wa-pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.wa-head{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#f0f2f5;border-bottom:1px solid #e9edef}
+.wa-head .who{flex:1;min-width:0}
+.wa-head .who b{display:block;font-size:14.5px}
+.wa-head .who span{display:block;font-size:12px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wa-head .who span.typing{color:var(--green-dark);font-weight:600}
+.wa-head select{width:auto;max-width:230px;background:#fff;font-size:12.5px;padding:6px 8px}
+.wa-scope{font-size:11.5px;color:#54656f;background:#fff;border-bottom:1px solid #e9edef;padding:6px 16px}
+.wa-msgs{flex:1;overflow:auto;padding:14px 6% 18px;display:flex;flex-direction:column;gap:3px;
+  background-color:#efeae2;background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1.5px),radial-gradient(rgba(0,0,0,.025) 1px,transparent 1.5px);background-size:22px 22px,22px 22px;background-position:0 0,11px 11px}
+.wa-day{align-self:center;background:#fff;color:#54656f;font-size:11.5px;padding:5px 12px;border-radius:8px;margin:10px 0 6px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.bub{position:relative;max-width:min(78%,620px);padding:7px 10px 6px;border-radius:8px;font-size:13.8px;line-height:1.5;box-shadow:0 1px .5px rgba(11,20,26,.13);margin-top:6px;word-wrap:break-word}
+.bub.me{align-self:flex-end;background:#d9fdd3;border-top-right-radius:0}
+.bub.bot{align-self:flex-start;background:#fff;border-top-left-radius:0}
+.bub.me:before,.bub.bot:before{content:"";position:absolute;top:0;width:10px;height:13px}
+.bub.me:before{right:-8px;background:linear-gradient(225deg,transparent 50%,#d9fdd3 50%)}
+.bub.bot:before{left:-8px;background:linear-gradient(135deg,transparent 50%,#fff 50%)}
+.bub.cont{margin-top:2px;border-radius:8px}.bub.cont:before{display:none}
+.bub.err{background:#fdecec;color:#8f1d1d}.bub.err:before{background:linear-gradient(135deg,transparent 50%,#fdecec 50%)}
+.bub ul{margin:4px 0 2px;padding-left:18px}
+.bub .foot{float:right;margin:6px 0 -4px 12px;font-size:10.5px;color:#667781;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.bub .foot svg{width:16px;height:11px}
+.bub .src{display:block;clear:both;font-size:10.5px;color:#667781;margin-top:4px;border-top:1px solid #f0f2f5;padding-top:3px}
+.bub.writing .txt:after{content:"▍";animation:blink 1s steps(1) infinite;margin-left:1px;color:var(--green)}
+.dots{display:inline-flex;gap:4px;padding:4px 2px}.dots i{width:7px;height:7px;border-radius:50%;background:#9aa7b0;animation:bounce 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.6}30%{transform:translateY(-4px);opacity:1}}
+@keyframes blink{50%{opacity:0}}
+.wa-welcome{align-self:center;max-width:520px;background:#fff8c5;color:#54656f;font-size:12.5px;text-align:center;padding:10px 14px;border-radius:8px;margin:14px 0;box-shadow:0 1px .5px rgba(11,20,26,.13);line-height:1.5}
+.wa-sugg{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+.wa-sugg button{border:0;background:#fff;color:#0b6b2e;border-radius:18px;padding:7px 13px;font-size:12.5px;cursor:pointer;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.wa-sugg button:hover{background:#f5fbf6}
+.wa-compose{display:flex;gap:8px;align-items:flex-end;padding:10px 14px;background:#f0f2f5}
+.wa-compose textarea{flex:1;border:0;border-radius:22px;background:#fff;padding:11px 16px;min-height:44px;max-height:140px;resize:none;font-size:14px;line-height:1.4}
+.wa-compose textarea:focus{outline:2px solid #b7dcbf}
+.wa-send{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--green);color:#fff;display:grid;place-items:center;cursor:pointer}
+.wa-send:hover:not(:disabled){background:var(--green-dark)}.wa-send:disabled{background:#a9c7b1;cursor:default}
+.wa-send svg{width:21px;height:21px}
+.wa-banner{margin:10px 6% 0}
+@media(max-width:900px){.wa{grid-template-columns:1fr}.wa-list{display:none}}
+
+/* models */
+.cat{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:12px}
+.model{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.model b{font-size:13.5px}.model code{font-size:11.5px;color:var(--ink2)}
+.model .foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:6px}
+.bar{height:8px;background:#eef2f7;border-radius:4px;overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:var(--green);transition:width .4s}
+.hw{display:flex;flex-wrap:wrap;gap:18px;margin-top:10px;font-size:13px}
+.hw div b{display:block;font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:18px}
+/* optimise */
+.optgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 22px}
+input[type=range]{width:100%;accent-color:var(--green)}
+.rangeval{font-weight:700;font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink)}
+details.adv summary{cursor:pointer;color:var(--green-dark);font-weight:600;font-size:13px;margin-top:14px}
+/* train */
+.train{display:grid;grid-template-columns:260px 1fr;gap:16px}
+.alist button{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
+.alist button[aria-current=true]{border-color:var(--green);background:var(--green-bg)}
+.alist button small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.styles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.styles label{border:1px solid var(--line);border-radius:10px;padding:9px 10px;cursor:pointer;font-size:12.5px}
+.styles label:has(input:checked){border-color:var(--green);background:var(--green-bg)}
+.styles input{margin-right:6px;accent-color:var(--green)}
+.ex{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px;display:grid;grid-template-columns:1fr auto;gap:6px 10px}
+.ex textarea{min-height:44px}
+.toggle{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:13px}
+.toggle input{margin-top:3px;accent-color:var(--green);width:16px;height:16px}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);display:none;max-width:420px;z-index:9}
+@media(max-width:1000px){.grid2,.train,.optgrid{grid-template-columns:1fr}.styles{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="card shell" style="padding-top:8px">
+  <div class="tabs" role="tablist" id="tabbar">
+    <button role="tab" data-tab="models" aria-selected="false">Models</button>
+    <button role="tab" data-tab="optimise" aria-selected="false">Optimise</button>
+    <button role="tab" data-tab="train" aria-selected="false">Train</button>
+  </div>
+  <div id="view"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const API='http://127.0.0.1:8765/api/ai';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n==null?'—':Number(n).toLocaleString('en-GB');
+const gb=b=>b==null?'—':(b/1024**3).toFixed(1)+' GB';
+const day=d=>new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+// ?mode=ask: the chat ("Ask the data"). ?mode=config: Models, Optimise and Train ("Configuration").
+const MODE=new URLSearchParams(location.search).get('mode')==='config'?'config':'ask';
+let tab=MODE==='ask'?'ask':'models',st=null,assist=[],styles=[],editing=null,portal=null,chatAssistant=null,abort=null,pollTimer=null,confirmDelete=null;
+if(MODE==='ask'){document.getElementById('tabbar').remove();document.title='Ask the data';document.documentElement.classList.add('ask-mode');document.querySelector('.card.shell').style.padding='0'}else{document.title='Configuration'}
+// Pages hand over between sections through localStorage (same origin): which tab to open, which assistant to chat with.
+try{if(MODE==='config'){const t=localStorage.getItem('impilo.ai.tab');if(['models','optimise','train'].includes(t))tab=t}const a=localStorage.getItem('impilo.ai.assistant');if(a)chatAssistant=a}catch{}
+
+// ------------------------------------------------------------------ shell
+function postHeight(){parent.postMessage({type:'ai-assistant-height',height:document.documentElement.scrollHeight},'*')}
+new ResizeObserver(postHeight).observe(document.body);
+function toast(msg,ms=3500){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms)}
+async function call(path,opts={}){
+  const r=await fetch(API+path,{cache:'no-store',...opts,headers:{'content-type':'application/json',...(opts.headers||{})}});
+  const body=r.headers.get('content-type')?.includes('json')?await r.json():{};
+  if(!r.ok){const d=body.detail;throw Error(Array.isArray(d)?d.map(x=>`${x.loc?.slice(-1)[0]}: ${x.msg}`).join('; '):d||`Request failed (${r.status})`)}
+  return body;
+}
+async function refresh(){try{st=await call('/status')}catch(e){st={error:e.message}}}
+async function loadAssistants(){const r=await call('/assistants');assist=r.assistants;styles=r.styles}
+function openSection(section){if(window.parent!==window)parent.postMessage({type:'impilo-open-section',section},'*')}
+function setTab(t){
+  if(MODE==='ask'&&t!=='ask'){try{localStorage.setItem('impilo.ai.tab',t)}catch{};openSection('Configuration');return}
+  if(MODE==='config'&&t==='ask'){openSection('Ask the data');return}
+  tab=t;try{if(MODE==='config')localStorage.setItem('impilo.ai.tab',t)}catch{};document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));render()}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+function render(){({ask:renderAsk,models:renderModels,optimise:renderOptimise,train:renderTrain})[tab]();postHeight()}
+const ollamaBanner=()=>!st||st.error?`<div class="notice bad">The portal API isn't reachable (${esc(st?.error||'')}). Make sure start.cmd is running.</div>`
+  :!st.ollama.running?`<div class="notice warn"><b>Ollama is not running.</b> ${st.ollama.installed?'Start it in <button class="linkbtn" data-go="models">Configuration → Models</button>.':'Install it from <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>, then start it in <button class="linkbtn" data-go="models">Configuration → Models</button>.'}</div>`:'';
+function bindGo(){document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.go)))}
+
+// Portal-wide filters: the assistant answers for the same place and period as the rest of the portal.
+window.addEventListener('message',e=>{if(e.source!==window.parent||e.data?.type!=='impilo-filters')return;portal=e.data;if(tab==='ask')updateScope()});
+if(window.parent!==window)parent.postMessage({type:'impilo-filters-request'},'*');
+function filters(){if(!portal)return{};const f=portal.filters,r=portal.resolved;return{province:f.province,district:f.district,type:f.type,facility:f.facility,from:r?.from,to:r?.to}}
+function updateScope(){const el=$('scope');if(!el)return;const r=portal?.resolved;el.innerHTML=r?`Answers use portal figures for <b>${esc(r.label)}</b>${r.typeLabel?' · '+esc(r.typeLabel):''} · ${day(r.from)} – ${day(r.to)}`:'Answers use national figures for the last 12 months of data.'}
+
+// ------------------------------------------------------------------ ask
+// WhatsApp-style chat. Conversations are saved in this browser (localStorage) so you can come back and
+// continue them; the last few messages are sent with each question so the assistant follows the thread.
+const SUGGESTIONS=['How many people tested HIV positive?','Which facility has the most HIV cases?','How many OPD visits were there, and how do they split by sex?','Which month had the most attendances?','Which age group has the most HIV positive cases?','Which provinces are not reporting yet?'];
+// Each signed-in user has their own saved conversations.
+const CHATS_KEY='impilo.ai.chats.v1.'+(window.ImpiloAuth?.user?.username||'guest'),MAX_CHATS=60,MAX_MSGS=200;
+const BOT_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M8.5 13h.01M15.5 13h.01M9.5 16.5h5"/></svg>';
+const SEND_ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8z"/></svg>';
+const STOP_ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const STAR=(on)=>`<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M12 3.3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.6l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="${on?'#f5b301':'none'}" stroke="${on?'#f5b301':'#8696a0'}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+const TICKS='<svg viewBox="0 0 16 11" aria-hidden="true"><path d="M11.07.65 4.98 7.37 2.4 4.86 1.3 5.97l3.73 3.63L12.2 1.75z" fill="#53bdeb"/><path d="M15.07.65 8.98 7.37l-.64-.62-1.1 1.13 1.79 1.72L16.2 1.75z" fill="#53bdeb"/></svg>';
+let chats=[],currentChat=null,chatSearch='',confirmChatDelete=null,chatFilter='all';
+function loadChats(){try{if(!localStorage.getItem(CHATS_KEY)&&localStorage.getItem('impilo.ai.chats.v1')){localStorage.setItem(CHATS_KEY,localStorage.getItem('impilo.ai.chats.v1'));localStorage.removeItem('impilo.ai.chats.v1')}}catch{}
+  try{chats=JSON.parse(localStorage.getItem(CHATS_KEY)||'[]')}catch{chats=[]}try{currentChat=localStorage.getItem(CHATS_KEY+'.current')}catch{}}
+function saveChats(){chats.sort((a,b)=>b.updated.localeCompare(a.updated));const fav=chats.filter(c=>c.favourite),rest=chats.filter(c=>!c.favourite);chats=[...fav,...rest.slice(0,Math.max(0,MAX_CHATS-fav.length))];for(const c of chats)c.messages=c.messages.slice(-MAX_MSGS);
+  try{localStorage.setItem(CHATS_KEY,JSON.stringify(chats));localStorage.setItem(CHATS_KEY+'.current',currentChat||'')}catch{toast('This browser could not save the conversation.')}}
+const chatById=id=>chats.find(c=>c.id===id);
+function newChat(){const c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:'New conversation',assistantId:chatAssistant||assist[0]?.id,messages:[],created:new Date().toISOString(),updated:new Date().toISOString()};chats.unshift(c);currentChat=c.id;saveChats();return c}
+function mdLite(text){ // safe: escape first, then a little formatting
+  let h=esc(text).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  const lines=h.split('\n');let out='',inList=false;
+  for(const l of lines){const m=l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/);if(m){if(!inList){out+='<ul>';inList=true}out+=`<li>${m[1]}</li>`}else{if(inList){out+='</ul>';inList=false}out+=l?l+'<br>':'<br>'}}
+  return (inList?out+'</ul>':out).replace(/(<br>)+$/,'');
+}
+const hhmm=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+function dayLabel(t){const d=new Date(t),today=new Date();const y=new Date();y.setDate(today.getDate()-1);
+  return d.toDateString()===today.toDateString()?'Today':d.toDateString()===y.toDateString()?'Yesterday':d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}
+function listWhen(t){const d=new Date(t),today=new Date();return d.toDateString()===today.toDateString()?hhmm(t):d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+const initials=n=>String(n||'AI').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+function bubble(m,prev){
+  const me=m.role==='user',cont=prev&&prev.role===m.role&&!m.error&&!prev.error;
+  const body=me?esc(m.content).replace(/\n/g,'<br>'):(m.content?mdLite(m.content):'<span class="dots"><i></i><i></i><i></i></span>');
+  return `<div class="bub ${me?'me':'bot'}${cont?' cont':''}${m.error?' err':''}${m.writing?' writing':''}" data-t="${esc(m.time)}"><span class="txt">${body}</span><span class="foot">${hhmm(m.time)}${me?TICKS:''}</span>${!me&&m.meta?`<span class="src">${esc(m.meta)}</span>`:''}</div>`;
+}
+function messagesHtml(c){
+  let html='',lastDay='',prev=null;
+  for(const m of c.messages){const day=dayLabel(m.time);if(day!==lastDay){html+=`<div class="wa-day">${day}</div>`;lastDay=day;prev=null}html+=bubble(m,prev);prev=m}
+  return html;
+}
+function renderAsk(){
+  loadChatsOnce();
+  const ready=st&&!st.error&&st.ollama.running;
+  let c=chatById(currentChat);
+  const a=assist.find(x=>x.id===(c?.assistantId||chatAssistant))||assist[0];
+  if(a)chatAssistant=a.id;
+  const model=a?.modelName||a?.baseModel||st?.settings?.defaultModel;
+  const canAsk=ready&&!!model;
+  const q=chatSearch.toLowerCase();
+  const list=chats.filter(x=>!q||x.title.toLowerCase().includes(q)||x.messages.some(m=>m.content.toLowerCase().includes(q)));
+  const last=x=>x.messages[x.messages.length-1];
+  const statusLine=abort?'<span class="typing">typing…</span>':`<span>${model?esc(model):'no model chosen'}${a?.usePortalData?' · answers from live portal figures':''}</span>`;
+  $('view').innerHTML=`<div class="wa">
+    <aside class="wa-list" aria-label="Conversations">
+      <div class="wa-list-head"><h2>Chats</h2><button class="wa-new" id="newChat">+ New chat</button></div>
+      <div class="wa-search"><input type="text" id="chatSearch" placeholder="Search conversations" value="${esc(chatSearch)}"></div>
+      <div class="wa-filter" role="tablist" aria-label="Show"><button role="tab" data-filter="all" aria-selected="${chatFilter==='all'}">All</button><button role="tab" data-filter="fav" aria-selected="${chatFilter==='fav'}">${STAR(chatFilter==='fav')} Favourites (${chats.filter(c=>c.favourite).length})</button></div>
+      <div class="wa-chats">${(()=>{const shown=chatFilter==='fav'?list.filter(x=>x.favourite):list;const fav=shown.filter(x=>x.favourite),rest=shown.filter(x=>!x.favourite);
+        const item=x=>{const lm=last(x);const an=assist.find(y=>y.id===x.assistantId)?.name;
+          return `<div class="wa-chat${x.id===currentChat?' on':''}" data-chat="${esc(x.id)}"><div class="avatar">${initials(an)}</div><div class="t"><b>${esc(x.title)}</b><span>${lm?(lm.role==='user'?'You: ':'')+esc(lm.content.replace(/\s+/g,' ').slice(0,80)):'No messages yet'}</span></div>
+            <div class="side"><span class="when">${listWhen(x.updated)}</span><button class="star${x.favourite?' on':''}" data-fav="${esc(x.id)}" aria-pressed="${!!x.favourite}" title="${x.favourite?'Remove from favourites':'Add to favourites'}">${STAR(x.favourite)}</button></div>
+            <button class="del${confirmChatDelete===x.id?' confirm':''}" data-delchat="${esc(x.id)}">${confirmChatDelete===x.id?'Confirm delete':'Delete'}</button></div>`};
+        if(!shown.length)return `<div class="wa-empty-list">${chatFilter==='fav'?'No favourite chats yet. Tap the star on a chat to keep it here.':chats.length?'No conversations match your search.':'Your conversations will appear here. They are saved in this browser, so you can come back and continue them.'}</div>`;
+        return (fav.length&&chatFilter==='all'?`<div class="wa-sec">${STAR(true)} Favourites</div>`:'')+fav.map(item).join('')+(fav.length&&rest.length?'<div class="wa-sec">All chats</div>':'')+rest.map(item).join('')})()}</div>
+    </aside>
+    <section class="wa-pane">
+      <div class="wa-head"><div class="avatar">${BOT_ICON}</div><div class="who"><b>${esc(c?.title&&c.messages.length?c.title:(a?.name||'Assistant'))}</b><span id="waStatus">${c?.messages.length?esc(a?.name||'')+' · ':''}${statusLine}</span></div>${c?`<button class="star big${c.favourite?' on':''}" data-fav="${esc(c.id)}" aria-pressed="${!!c.favourite}" title="${c.favourite?'Remove from favourites':'Add to favourites'}">${STAR(c.favourite)}</button>`:''}
+        <select id="assistantSel" aria-label="Assistant">${assist.map(x=>`<option value="${esc(x.id)}"${x.id===a?.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+      <div class="wa-scope" id="scope"></div>
+      ${!ready||!model?`<div class="wa-banner">${ollamaBanner()}${ready&&!model?`<div class="notice warn"><b>No model chosen yet.</b> Download one in <button class="linkbtn" data-go="models">Configuration → Models</button> and set it as the default.</div>`:''}</div>`:''}
+      <div class="wa-msgs" id="msgs" aria-live="polite">${c&&c.messages.length?messagesHtml(c)
+        :`<div class="wa-welcome">Ask about the figures in the portal. The assistant runs on this computer and only sees aggregated figures for the filters at the top, never patient records.</div><div class="wa-sugg">${SUGGESTIONS.map(s=>`<button${canAsk?'':' disabled'}>${esc(s)}</button>`).join('')}</div>`}</div>
+      <form class="wa-compose" id="composer"><textarea id="q" placeholder="${canAsk?'Type a message':'Start Ollama and choose a model to chat'}" rows="1"${canAsk?'':' disabled'}></textarea>
+        <button class="wa-send" id="send" aria-label="${abort?'Stop':'Send'}"${canAsk||abort?'':' disabled'}>${abort?STOP_ICON:SEND_ICON}</button></form>
+    </section></div>`;
+  updateScope();bindGo();
+  $('newChat').addEventListener('click',()=>{if(abort)return;newChat();renderAsk();$('q')?.focus()});
+  $('chatSearch').addEventListener('input',e=>{chatSearch=e.target.value;const pos=e.target.selectionStart;renderAsk();const i=$('chatSearch');i.focus();i.setSelectionRange(pos,pos)});
+  document.querySelectorAll('[data-chat]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-delchat],[data-fav]')||abort)return;currentChat=el.dataset.chat;confirmChatDelete=null;saveChats();renderAsk()}));
+  document.querySelectorAll('[data-fav]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const cc=chatById(b.dataset.fav);if(!cc)return;cc.favourite=!cc.favourite;saveChats();renderAsk();toast(cc.favourite?'Added to favourites.':'Removed from favourites.',1800)}));
+  document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{chatFilter=b.dataset.filter;renderAsk()}));
+  document.querySelectorAll('[data-delchat]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.delchat;if(confirmChatDelete!==id){confirmChatDelete=id;renderAsk();return}
+    confirmChatDelete=null;chats=chats.filter(x=>x.id!==id);if(currentChat===id)currentChat=chats[0]?.id||null;saveChats();renderAsk()}));
+  $('assistantSel').addEventListener('change',e=>{chatAssistant=e.target.value;try{localStorage.setItem('impilo.ai.assistant',chatAssistant)}catch{};
+    const cc=chatById(currentChat);if(cc){cc.assistantId=chatAssistant;saveChats()}renderAsk()});
+  document.querySelectorAll('.wa-sugg button').forEach(b=>b.addEventListener('click',()=>{if(canAsk){$('q').value=b.textContent;ask()}}));
+  const qa=$('q');qa.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()}});
+  qa.addEventListener('input',()=>{qa.style.height='auto';qa.style.height=Math.min(140,qa.scrollHeight)+'px'});
+  $('composer').addEventListener('submit',e=>{e.preventDefault();abort?abort.abort():ask()});
+  const m=$('msgs');m.scrollTop=m.scrollHeight;
+}
+let chatsLoaded=false;function loadChatsOnce(){if(!chatsLoaded){loadChats();chatsLoaded=true}}
+async function ask(){
+  const q=$('q').value.trim();if(!q||abort)return;
+  let c=chatById(currentChat)||newChat();
+  // The thread so far (without failed replies) goes with the question, so follow-ups like "and in July?" work.
+  const history=c.messages.filter(m=>!m.error&&m.content).map(m=>({role:m.role,content:m.content}));
+  const now=new Date().toISOString();
+  c.messages.push({role:'user',content:q,time:now});
+  if(c.title==='New conversation')c.title=q.length>60?q.slice(0,57)+'…':q;
+  const bot={role:'assistant',content:'',meta:'',time:now,writing:true};c.messages.push(bot);c.updated=now;c.assistantId=chatAssistant;saveChats();
+  abort=new AbortController();const t0=performance.now();renderAsk();
+  const box=()=>{const all=document.querySelectorAll('.wa-msgs .bub.bot');return all[all.length-1]};
+  try{
+    const r=await fetch(API+'/chat',{method:'POST',signal:abort.signal,headers:{'content-type':'application/json'},body:JSON.stringify({message:q,history,assistantId:chatAssistant,filters:filters()})});
+    if(!r.ok){const b=await r.json().catch(()=>({}));throw Error(b.detail||`Request failed (${r.status})`)}
+    const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
+    for(;;){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
+      let i;while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+1);if(!line.trim())continue;const ev=JSON.parse(line);
+        if(ev.type==='token'){bot.content+=ev.text;const b=box();if(b){b.querySelector('.txt').innerHTML=mdLite(bot.content);const m=$('msgs');m.scrollTop=m.scrollHeight}}
+        else if(ev.type==='meta'){bot.meta=`${ev.model}${ev.grounded?' · from portal figures for '+(portal?.resolved?.label||'Zimbabwe'):''}`}
+        else if(ev.type==='done'){bot.meta+=` · ${((performance.now()-t0)/1000).toFixed(1)} s`}
+        else if(ev.type==='error'){throw Error(ev.message)}}}
+    if(!bot.content)bot.content='(No answer was returned.)';
+  }catch(e){if(e.name==='AbortError'){bot.meta+=' · stopped';if(!bot.content)bot.content='(Stopped.)'}else{bot.content=e.message;bot.error=true}}
+  delete bot.writing;bot.time=new Date().toISOString();c.updated=bot.time;abort=null;saveChats();renderAsk();
+}
+
+// ------------------------------------------------------------------ models
+function renderModels(){
+  if(!st||st.error){$('view').innerHTML=ollamaBanner();return}
+  const o=st.ollama,hw=st.hardware,inst=new Set(st.installed.map(m=>m.name)),run=new Set(st.running.map(m=>m.name));
+  const dl=Object.fromEntries((st.downloads||[]).map(d=>[d.model,d]));
+  const active=(st.downloads||[]).filter(d=>!d.done);
+  $('view').innerHTML=`<div class="wrap">
+    <div class="grid2">
+      <div class="card"><h2>Ollama</h2><div class="sub">The engine that runs AI models on this computer.</div>
+        <div class="row" style="margin-top:12px">${o.running?`<span class="pill on"><i class="dot"></i>Running · version ${esc(o.version)}</span>`:o.installed?'<span class="pill off"><i class="dot"></i>Stopped</span>':'<span class="pill bad"><i class="dot"></i>Not installed</span>'}
+          ${o.running?'<button class="btn danger sm" id="srvStop">Stop</button>':o.installed?'<button class="btn sm" id="srvStart">Start Ollama</button>':''}</div>
+        ${!o.installed?'<div class="notice info" style="margin-top:12px">Install Ollama from <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a> (or run <code>winget install Ollama.Ollama</code>), then click Start.</div>':''}
+        <div class="help" id="srvMsg"></div></div>
+      <div class="card"><h2>This computer</h2><div class="sub">Models run in memory; bigger models need more.</div>
+        <div class="hw"><div><b>${hw.ramGb??'?'} GB</b>RAM${hw.ramFreeGb!=null?` · ${hw.ramFreeGb} GB free`:''}</div><div><b>${hw.cpuThreads??'?'}</b>CPU threads</div><div><b>${hw.gpu?esc(hw.gpu.name):'None'}</b>${hw.gpu?hw.gpu.vramGb+' GB graphics memory':'NVIDIA graphics card'}</div></div></div>
+    </div>
+    <div class="card"><h2>Installed models</h2><div class="sub">Start a model to load it into memory so the first answer is quick; stop it to free memory. The default model answers when an assistant has no model of its own.</div>
+      ${st.installed.length?`<table style="margin-top:10px"><thead><tr><th>Model</th><th>Size</th><th>Parameters</th><th>Status</th><th></th></tr></thead><tbody>
+      ${st.installed.map(m=>`<tr><td><b>${esc(m.name)}</b>${m.name===st.settings.defaultModel?' <span class="pill on">Default</span>':''}${m.name.startsWith('impilo-')?' <span class="pill warn">Custom assistant</span>':''}</td>
+        <td class="num">${gb(m.size)}</td><td>${esc(m.parameters||'')} ${esc(m.quantization||'')}</td>
+        <td>${run.has(m.name)?'<span class="pill on"><i class="dot"></i>In memory</span>':'<span class="pill off">Stopped</span>'}</td>
+        <td style="text-align:right" class="row" data-m="${esc(m.name)}">${run.has(m.name)?'<button class="btn ghost sm" data-act="unload">Stop</button>':'<button class="btn sm" data-act="load">Start</button>'}
+          ${m.name!==st.settings.defaultModel&&!m.name.startsWith('impilo-')?'<button class="btn ghost sm" data-act="default">Set as default</button>':''}
+          <button class="btn danger sm" data-act="delete">${confirmDelete===m.name?'Confirm delete':'Delete'}</button></td></tr>`).join('')}</tbody></table>`
+      :`<div class="notice info" style="margin-top:12px">No models yet. Download one below.</div>`}</div>
+    <div class="card"><h2>Download a model</h2><div class="sub">Models download once and stay on this computer. "Fits" means it should run comfortably with ${hw.ramGb??'?'} GB RAM.</div>
+      ${active.length||Object.values(dl).some(d=>d.error)?`<div style="margin-top:12px">${(st.downloads||[]).filter(d=>!d.done||d.error).map(d=>`<div style="margin-bottom:10px"><div class="row" style="justify-content:space-between"><span><b>${esc(d.model)}</b> · ${d.error?`<span style="color:#b42318">${esc(d.error)}</span>`:esc(d.status)}</span>
+        <span class="row">${d.total?`<span class="sub" style="margin:0">${gb(d.completed)} of ${gb(d.total)} · ${d.percent}%</span>`:''}${d.done?'':`<button class="btn ghost sm" data-cancel="${esc(d.model)}">Cancel</button>`}</span></div>${d.error?'':`<div class="bar"><div style="width:${d.percent}%"></div></div>`}</div>`).join('')}</div>`:''}
+      <div class="cat">${st.catalogue.map(c=>{const has=inst.has(c.name),busy=dl[c.name]&&!dl[c.name].done,fits=!hw.ramGb||c.minRamGb<=hw.ramGb||(hw.gpu&&c.minRamGb<=hw.gpu.vramGb*2);
+        return `<div class="model"><b>${esc(c.label)}</b><code>${esc(c.name)}</code><div class="sub" style="margin:0">${esc(c.note)}</div>
+          <div class="foot"><span class="row">${fits?'<span class="pill on">Fits</span>':'<span class="pill warn">Needs '+c.minRamGb+' GB RAM</span>'}<span class="sub" style="margin:0">${esc(c.size)}</span></span>
+          ${has?'<span class="pill on">Installed</span>':`<button class="btn sm" data-pull="${esc(c.name)}"${busy||!o.running?' disabled':''}>${busy?'Downloading…':'Download'}</button>`}</div></div>`}).join('')}</div>
+      <label class="f" for="customModel">Another model from the Ollama library</label>
+      <div class="row"><input type="text" id="customModel" placeholder="e.g. gemma3:4b or qwen3:8b" style="max-width:320px"><button class="btn" id="pullCustom"${o.running?'':' disabled'}>Download</button></div>
+      <div class="help">Browse names at <a href="https://ollama.com/library" target="_blank" rel="noopener">ollama.com/library</a>.</div></div></div>`;
+  $('srvStart')?.addEventListener('click',()=>act('Starting Ollama…',()=>call('/server/start',{method:'POST'}),r=>r.message));
+  $('srvStop')?.addEventListener('click',()=>act('Stopping…',()=>call('/server/stop',{method:'POST'}),r=>r.message));
+  document.querySelectorAll('[data-pull]').forEach(b=>b.addEventListener('click',()=>pull(b.dataset.pull)));
+  $('pullCustom').addEventListener('click',()=>{const v=$('customModel').value.trim();if(v)pull(v)});
+  document.querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>act('Cancelling…',()=>call('/models/pull/cancel',{method:'POST',body:JSON.stringify({model:b.dataset.cancel})}))));
+  document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{const m=b.closest('[data-m]').dataset.m,a=b.dataset.act,enc=encodeURIComponent(m);
+    if(a==='load')act(`Starting ${m}… (the first start can take a minute)`,()=>call(`/models/${enc}/load`,{method:'POST'}),r=>`${m} is ready (loaded in ${r.seconds} s).`);
+    if(a==='unload')act(`Stopping ${m}…`,()=>call(`/models/${enc}/unload`,{method:'POST'}),()=>`${m} stopped; memory freed.`);
+    if(a==='default')act('Saving…',()=>call('/settings',{method:'PUT',body:JSON.stringify({...st.settings,defaultModel:m})}),()=>`${m} is now the default model.`);
+    if(a==='delete'){if(confirmDelete!==m){confirmDelete=m;renderModels();return}confirmDelete=null;act(`Deleting ${m}…`,()=>call(`/models/${enc}`,{method:'DELETE'}),()=>`${m} deleted.`)}}));
+  if(active.length&&!pollTimer)pollTimer=setInterval(async()=>{await refresh();if(!(st.downloads||[]).some(d=>!d.done)){clearInterval(pollTimer);pollTimer=null;const done=(st.downloads||[]).filter(d=>d.percent===100);if(done.length)toast('Download finished.')}if(tab==='models')renderModels()},1000);
+}
+async function act(busyMsg,fn,okMsg){toast(busyMsg,60000);try{const r=await fn();toast(okMsg?okMsg(r):'Done.')}catch(e){toast(e.message,7000)}await refresh();render()}
+async function pull(name){await act(`Starting download of ${name}…`,()=>call('/models/pull',{method:'POST',body:JSON.stringify({model:name})}),r=>r.started?`Downloading ${name}…`:r.message)}
+
+// ------------------------------------------------------------------ optimise
+let recommendation=null;
+function renderOptimise(){
+  if(!st||st.error){$('view').innerHTML=ollamaBanner();return}
+  const s=st.settings,models=st.installed.filter(m=>!m.name.startsWith('impilo-'));
+  const sel=(id,opts,val)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}"${String(v)===String(val??'')?' selected':''}>${l}</option>`).join('')}</select>`;
+  $('view').innerHTML=`<div class="wrap">
+    <div class="notice info row" style="justify-content:space-between"><span>Not sure what to choose? Get settings suited to this computer's memory, processor and graphics card.</span><button class="btn ghost sm" id="recommend">Recommend for this PC</button></div>
+    ${recommendation?`<div class="notice ok"><b>Recommended:</b> model <b>${esc(recommendation.model)}</b>${models.some(m=>m.name===recommendation.model)?'':' (download it on the Models tab)'}. <ul style="margin:6px 0 0;padding-left:18px">${recommendation.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul><div class="help">The form below has been filled in; click Save to use it.</div></div>`:''}
+    <div class="card"><h2>How the model answers</h2>
+      <div class="optgrid">
+        <div><label class="f" for="defaultModel">Default model</label>${sel('defaultModel',[['','— choose —'],...models.map(m=>[m.name,m.name])],s.defaultModel)}<div class="help">Used by assistants that don't have their own model.</div></div>
+        <div><label class="f" for="temperature">Creativity <span class="rangeval" id="tempVal">${s.temperature}</span></label><input type="range" id="temperature" min="0" max="1.5" step="0.05" value="${s.temperature}"><div class="help">Low (0–0.3) gives factual, consistent answers - best for figures. Higher is more varied.</div></div>
+        <div><label class="f" for="num_predict">Longest answer</label>${sel('num_predict',[[256,'Short (~200 words)'],[512,'Medium (~400 words)'],[1024,'Long (~800 words)'],[2048,'Very long (~1,500 words)']],s.num_predict)}<div class="help">Caps the answer length; shorter is faster.</div></div>
+      </div></div>
+    <div class="card"><h2>Speed and memory</h2>
+      <div class="optgrid">
+        <div><label class="f" for="num_ctx">Reading window (context)</label>${sel('num_ctx',[[2048,'2,048 tokens - too small for portal data'],[4096,'4,096 tokens - recommended'],[8192,'8,192 tokens'],[16384,'16,384 tokens - most memory']],s.num_ctx)}<div class="help">How much text the model reads at once: your question, earlier messages and the portal figures (about 1,200 tokens). Bigger uses more memory and is slower. With live portal data at least 4,096 is always used.</div></div>
+        <div><label class="f" for="keep_alive">Keep model in memory after use</label>${sel('keep_alive',[['5m','5 minutes'],['10m','10 minutes'],['30m','30 minutes'],['1h','1 hour'],['-1','Always (until stopped)'],['0','Unload straight away']],s.keep_alive)}<div class="help">Longer means quicker answers; shorter frees memory for other work sooner.</div></div>
+        <div><label class="f" for="num_gpu">Graphics card</label>${sel('num_gpu',[['','Automatic (recommended)'],['0','Don\'t use - CPU only'],['999','Use as much as possible']],s.num_gpu)}<div class="help">Ollama uses a supported graphics card automatically. Choose CPU only if the computer becomes unstable.</div></div>
+        <div><label class="f" for="num_thread">CPU threads</label>${sel('num_thread',[['','Automatic (recommended)'],...[2,4,6,8,12,16].filter(n=>n<=(st.hardware.cpuThreads||16)).map(n=>[n,n+' threads'])],s.num_thread)}<div class="help">Use about one per physical CPU core. Fewer leaves the computer more responsive.</div></div>
+      </div>
+      <details class="adv"><summary>Advanced</summary><div class="optgrid">
+        <div><label class="f" for="top_p">Word choice range (top-p) <span class="rangeval" id="toppVal">${s.top_p}</span></label><input type="range" id="top_p" min="0.1" max="1" step="0.05" value="${s.top_p}"><div class="help">Lower keeps wording conservative.</div></div>
+        <div><label class="f" for="repeat_penalty">Avoid repetition <span class="rangeval" id="rpVal">${s.repeat_penalty}</span></label><input type="range" id="repeat_penalty" min="1" max="1.5" step="0.05" value="${s.repeat_penalty}"><div class="help">Raise slightly if answers repeat themselves.</div></div>
+      </div></details>
+      <div class="row" style="margin-top:16px"><button class="btn" id="saveSettings">Save settings</button><span class="help" style="margin:0">Applies to the next question. Built assistants keep their creativity and reading window until rebuilt.</span></div></div></div>`;
+  for(const [i,o] of [['temperature','tempVal'],['top_p','toppVal'],['repeat_penalty','rpVal']])$(i).addEventListener('input',e=>$(o).textContent=e.target.value);
+  $('recommend').addEventListener('click',async()=>{try{recommendation=await call('/settings/recommend');const r=recommendation.settings;st.settings={...st.settings,...r,defaultModel:st.installed.some(m=>m.name===recommendation.model)?recommendation.model:st.settings.defaultModel};renderOptimise()}catch(e){toast(e.message)}});
+  $('saveSettings').addEventListener('click',()=>{const v=id=>$(id).value;const n=x=>x===''?null:Number(x);
+    const body={defaultModel:v('defaultModel'),temperature:+v('temperature'),top_p:+v('top_p'),repeat_penalty:+v('repeat_penalty'),num_predict:+v('num_predict'),num_ctx:+v('num_ctx'),keep_alive:v('keep_alive'),num_gpu:n(v('num_gpu')),num_thread:n(v('num_thread'))};
+    recommendation=null;act('Saving…',()=>call('/settings',{method:'PUT',body:JSON.stringify(body)}),()=>'Settings saved.')});
+}
+
+// ------------------------------------------------------------------ train
+const STYLE_LABELS={concise:['Short','2–4 sentences, number first'],detailed:['Explained','Answer, then what it means'],bullets:['Bullet points','One figure per bullet'],briefing:['Briefing note','Headline, 3 points, action']};
+function blankAssistant(){return{id:null,name:'',baseModel:st?.settings?.defaultModel||'',domain:'',instructions:'',style:'concise',language:'English',examples:[],usePortalData:true}}
+
+let showAllEx=false;
+function exHtml(e,i){const style=e.kind==='style';
+  return `<div class="ex" data-i="${i}"><div><textarea class="exq" placeholder="Question">${esc(e.question)}</textarea>
+    <div class="row" style="margin:6px 0;font-size:12.5px"><label><input type="radio" name="kind-${i}" value="answer"${style?'':' checked'}> Exact answer</label><label><input type="radio" name="kind-${i}" value="style"${style?' checked':''}> How to answer</label></div>
+    <textarea class="exa" placeholder="${style?'How to answer, e.g. Give the total first, compare with the previous month, and flag positivity above 5%.':'The exact answer you want'}">${esc(e.answer)}</textarea></div>
+    <button class="btn danger sm" data-rm="${i}">Remove</button></div>`}
+function exSummary(list){const n=list.filter(e=>e.kind!=='style').length,m=list.length-n;
+  return `${n} exact answer${n===1?'':'s'} · ${m} answer style${m===1?'':'s'}`+(n>20?' · many exact answers slow every question; 5–20 is plenty':'')}
+const EX_TEMPLATE='question,answer,type\r\n"How many OPD visits were there?","There were 8,152 OPD General visits in the period, 65% of them by women.",answer\r\n"How is HIV testing going?","Give the number tested and the positivity rate, compare with the previous month, and flag positivity above 5%.",style\r\n"Which province is doing best?","Rank provinces by the figure asked about, name the top three with their numbers, and say which provinces have no reporting facilities.",style\r\n';
+function renderTrain(){
+  if(!editing)editing=structuredClone(assist[0]||blankAssistant());
+  const a=editing,models=(st?.installed||[]).filter(m=>!m.name.startsWith('impilo-'));
+  const saved=assist.find(x=>x.id===a.id);
+  $('view').innerHTML=`<div class="wrap">
+    <div class="notice info">Train an assistant by giving it a <b>domain</b>, <b>instructions</b>, an <b>answer style</b> and <b>example questions with the answers you want</b>. "Build" turns these into a custom model in Ollama. With "Use live portal data" on, it also reads the current figures for your filters before answering. This shapes how a model answers; it doesn't retrain the model itself.</div>
+    ${ollamaBanner()}
+    <div class="train">
+      <div class="alist">${assist.map(x=>`<button data-aid="${esc(x.id)}" aria-current="${x.id===a.id}"><b>${esc(x.name)}</b><small>${x.builtAt?(x.needsRebuild?'Changed - rebuild needed':'Built · '+esc(x.modelName)):'Not built yet'}</small></button>`).join('')}
+        <button id="newAssistant" style="border-style:dashed;color:var(--green-dark);font-weight:600">+ New assistant</button></div>
+      <div class="card"><div class="row" style="justify-content:space-between"><h2>${a.id?'Edit assistant':'New assistant'}</h2>
+          ${saved?.builtAt?`<span class="pill ${saved.needsRebuild?'warn':'on'}">${saved.needsRebuild?'Changes not built yet':'Built '+new Date(saved.builtAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' from '+esc(saved.builtFrom)}</span>`:''}</div>
+        <div class="grid2"><div><label class="f" for="aName">Name</label><input type="text" id="aName" value="${esc(a.name)}" placeholder="e.g. HIV programme analyst"></div>
+          <div><label class="f" for="aBase">Base model</label><select id="aBase"><option value="">Default model (${esc(st?.settings?.defaultModel||'none set')})</option>${models.map(m=>`<option${m.name===a.baseModel?' selected':''}>${esc(m.name)}</option>`).join('')}</select></div></div>
+        <label class="f" for="aDomain">Domain - what it knows about</label><textarea id="aDomain" placeholder="e.g. HIV testing services and ART programmes in Zimbabwe">${esc(a.domain)}</textarea>
+        <label class="f" for="aInstr">Instructions - how it should behave</label><textarea id="aInstr" rows="4" placeholder="e.g. Always compare with the previous month. Flag positivity above 5%. Use Ministry terms.">${esc(a.instructions)}</textarea>
+        <label class="f">Answer style</label><div class="styles">${styles.map(k=>`<label><input type="radio" name="aStyle" value="${k}"${a.style===k?' checked':''}><b>${STYLE_LABELS[k]?.[0]||k}</b><div class="help">${STYLE_LABELS[k]?.[1]||''}</div></label>`).join('')}</div>
+        <div class="grid2"><div><label class="f" for="aLang">Language</label><select id="aLang">${['English','Shona','Ndebele'].map(l=>`<option${a.language===l?' selected':''}>${l}</option>`).join('')}</select><div class="help">Small models write Shona and Ndebele less reliably than English.</div></div>
+          <div><div class="toggle"><input type="checkbox" id="aData"${a.usePortalData?' checked':''}><label for="aData"><b>Use live portal data</b><div class="help">Gives the assistant the current aggregated figures for the portal filters. Turn off for general questions.</div></label></div></div></div>
+        <label class="f">Example questions and answers</label>
+        <div class="help">For each question choose <b>Exact answer</b> (the wording you want back) or <b>How to answer</b> (guidance such as "give the total, compare with last month, flag anything above 5%"). Type them in, or upload a CSV, Excel or JSON file.</div>
+        <div class="row" style="margin-top:10px"><button class="btn ghost sm" id="addEx">+ Add example</button>
+          <label class="btn ghost sm" for="exFile" style="display:inline-block">Upload file</label><input type="file" id="exFile" accept=".csv,.xlsx,.json,.txt" hidden>
+          <button class="btn ghost sm" id="exTemplate">Download template</button>
+          ${a.examples.length?`<span class="sub" style="margin:0">${exSummary(a.examples)}</span><button class="linkbtn" id="exClear" style="margin-left:auto">${confirmDelete==='examples'?'Confirm remove all':'Remove all'}</button>`:''}</div>
+        <div class="help" id="exMsg"></div>
+        <div id="examples">${a.examples.map((e,i)=>i<(showAllEx?1e9:10)?exHtml(e,i):'').join('')}</div>
+        ${a.examples.length>10&&!showAllEx?`<button class="linkbtn" id="exMore" style="margin-top:8px">Show all ${a.examples.length} examples</button>`:''}
+        <div class="row" style="margin-top:18px"><button class="btn" id="build">Save and build</button><button class="btn ghost" id="saveOnly">Save only</button>
+          ${a.id?'<button class="btn ghost" id="tryIt">Try it in Ask the data</button>':''}${a.id&&assist.length>1?`<button class="btn danger" id="delA" style="margin-left:auto">${confirmDelete===a.id?'Confirm delete':'Delete'}</button>`:''}</div>
+        <div class="help" id="buildMsg"></div></div></div></div>`;
+  bindGo();
+  const collect=()=>{editing={...a,name:$('aName').value.trim(),baseModel:$('aBase').value,domain:$('aDomain').value,instructions:$('aInstr').value,style:document.querySelector('[name=aStyle]:checked')?.value||'concise',language:$('aLang').value,usePortalData:$('aData').checked,
+    examples:mergeHidden([...document.querySelectorAll('.ex')].map(x=>({i:+x.dataset.i,question:x.querySelector('.exq').value.trim(),answer:x.querySelector('.exa').value.trim(),kind:x.querySelector('input[type=radio]:checked')?.value||'answer'})))};return editing};
+  // Only the first 10 examples are shown until "Show all"; keep the hidden ones when collecting the form.
+  function mergeHidden(shown){const all=a.examples.map(e=>({...e}));for(const x of shown){all[x.i]={question:x.question,answer:x.answer,kind:x.kind}}return all}
+  document.querySelectorAll('[data-aid]').forEach(b=>b.addEventListener('click',()=>{editing=structuredClone(assist.find(x=>x.id===b.dataset.aid));confirmDelete=null;showAllEx=false;renderTrain()}));
+  $('newAssistant').addEventListener('click',()=>{editing=blankAssistant();showAllEx=false;renderTrain()});
+  $('addEx').addEventListener('click',()=>{collect();editing.examples.push({question:'',answer:'',kind:'answer'});showAllEx=true;renderTrain()});
+  document.querySelectorAll('.ex input[type=radio]').forEach(r=>r.addEventListener('change',()=>{collect();renderTrain()}));
+  $('exMore')?.addEventListener('click',()=>{collect();showAllEx=true;renderTrain()});
+  $('exClear')?.addEventListener('click',()=>{collect();if(confirmDelete!=='examples'){confirmDelete='examples';renderTrain();return}confirmDelete=null;editing.examples=[];renderTrain()});
+  $('exTemplate').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob(['\ufeff'+EX_TEMPLATE],{type:'text/csv'}));const l=document.createElement('a');l.href=url;l.download='assistant-examples-template.csv';document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+  $('exFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;collect();$('exMsg').textContent=`Reading ${file.name}…`;
+    try{const fd=new FormData();fd.append('file',file);const r=await fetch(API+'/examples/parse',{method:'POST',body:fd});const b=await r.json().catch(()=>({}));if(!r.ok)throw Error(b.detail||'Could not read the file.');
+      editing.examples=[...editing.examples.filter(x=>x.question||x.answer),...b.examples];
+      const skip=b.skipped.length?` ${b.skipped.length} row${b.skipped.length===1?'':'s'} skipped (${b.skipped.slice(0,3).map(x=>'row '+x.row+': '+x.reason).join('; ')}${b.skipped.length>3?'…':''}).`:'';
+      renderTrain();$('exMsg').textContent=`Added ${b.examples.length} example${b.examples.length===1?'':'s'} from ${file.name}.${skip}${b.truncated?' Only the first 500 were kept.':''} Click "Save and build" to use them.`}
+    catch(err){$('exMsg').textContent=err.message;toast(err.message,7000)}});
+  document.querySelectorAll('[data-rm]').forEach(b=>b.addEventListener('click',()=>{collect();editing.examples.splice(+b.dataset.rm,1);renderTrain()}));
+  const save=async()=>{const x=collect();if(!x.name){toast('Give the assistant a name.');return null}
+    x.examples=x.examples.filter(e=>e.question&&e.answer);const r=await call('/assistants',{method:'PUT',body:JSON.stringify(x)});await loadAssistants();editing=structuredClone(assist.find(y=>y.id===r.id));return r};
+  $('saveOnly').addEventListener('click',async()=>{try{if(await save()){toast('Saved.');renderTrain()}}catch(e){toast(e.message,7000)}});
+  $('build').addEventListener('click',async()=>{try{const r=await save();if(!r)return;$('buildMsg').textContent='Building the custom model in Ollama…';
+    const b=await call(`/assistants/${encodeURIComponent(r.id)}/build`,{method:'POST'});await loadAssistants();editing=structuredClone(assist.find(y=>y.id===b.id));await refresh();renderTrain();toast(`Built ${b.modelName}. Try it in Ask the data.`)}
+    catch(e){toast(e.message,8000);$('buildMsg').textContent=e.message;renderTrain()}});
+  $('tryIt')?.addEventListener('click',()=>{try{localStorage.setItem('impilo.ai.assistant',a.id)}catch{};openSection('Ask the data')});
+  $('delA')?.addEventListener('click',async()=>{if(confirmDelete!==a.id){confirmDelete=a.id;renderTrain();return}confirmDelete=null;try{await call(`/assistants/${encodeURIComponent(a.id)}`,{method:'DELETE'});await loadAssistants();editing=null;await refresh();renderTrain();toast('Assistant deleted.')}catch(e){toast(e.message)}});
+}
+
+(async()=>{
+  $('view').innerHTML='<div class="sub" style="padding:20px">Loading…</div>';
+  await refresh();try{await loadAssistants()}catch{}
+  setTab(tab);
+})();
+</script>
+</body>
+</html>

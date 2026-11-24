@@ -1,0 +1,9 @@
+GRANT SELECT ON facility.facility TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.dispense_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.appointment_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.tb_screening_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.patient_complaint_report TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.test_kit_batch_issue_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON report.test_kit_batch_register TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON consultation.art_re_test TO 'attendance_api'@'127.0.0.1';
+GRANT SELECT ON terminology.laboratory_result TO 'attendance_api'@'127.0.0.1';
