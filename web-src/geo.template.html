@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="./auth.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geospatial intelligence</title>
+<style>
+:root{--green:#218a39;--green-dark:#14532d;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--card:#fff;--up:#c62f2f;--down:#218a39;
+  --female:#c0367a;--male:#2563eb;--flow:#0f766e;--transfer:#7c3aed;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+*{box-sizing:border-box}
+body{margin:0;background:transparent}
+button{font:inherit}
+.wrap{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+/* question bar */
+.ask{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.ask form{display:flex;gap:8px}
+.ask .in{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;background:#fff}
+.ask .in:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.12)}
+.ask input{flex:1;border:0;outline:0;font:inherit;font-size:15px;padding:11px 0;background:none}
+.ask button.go{border:0;background:var(--green);color:#fff;font-weight:600;border-radius:12px;padding:0 18px;cursor:pointer}
+.ask button.go:hover{background:var(--green-dark)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#f8faf9;color:#334155;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.chip:hover{border-color:var(--green);color:var(--green-dark)}
+.understood{font-size:13px;color:var(--muted)}
+.understood b{color:var(--ink)}
+.understood.warn{color:#9a3412}
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;padding:12px 16px}
+.controls label,.controls .lab{display:block;font-size:11.5px;font-weight:600;color:#475569;margin-bottom:4px}
+.controls select,.controls input{font:inherit;font-size:13.5px;height:38px;border:1px solid #e2e5ea;border-radius:10px;padding:0 12px;background:#fff;color:#111827;box-shadow:0 1px 2px rgba(16,24,40,.06)}
+.controls select{-webkit-appearance:none;appearance:none;padding-right:34px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9l4-4 4 4M16 15l-4 4-4-4'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer}
+.controls select:focus,.controls input:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.seg{box-shadow:0 1px 2px rgba(16,24,40,.06);border-color:#e2e5ea!important;border-radius:10px!important}.seg button{height:36px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+.seg button{border:0;background:#fff;font-size:13px;padding:7px 11px;cursor:pointer;color:#475569;display:inline-flex;align-items:center;gap:5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:#e7f6ea;color:var(--green-dark);font-weight:600}
+.seg svg{width:14px;height:14px}
+/* main grid */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:12px}
+@media (max-width:1100px){.main{grid-template-columns:1fr}}
+.mapcard{position:relative;overflow:hidden;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 12px 8px 16px;flex-wrap:wrap}
+.crumbs{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:13.5px;flex:1;min-width:0}
+.crumbs button{border:0;background:none;color:var(--green);cursor:pointer;padding:2px 5px;border-radius:6px;font-weight:600}
+.crumbs button:hover{background:#e7f6ea}
+.crumbs .sep{color:#cbd5e1}
+.crumbs b{padding:2px 5px}
+.search{position:relative;width:300px}
+.search input{width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:7px 10px 7px 30px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 10px center}
+.search input:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.12)}
+.search ul{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(15,23,42,.12);list-style:none;margin:0;padding:4px;max-height:320px;overflow:auto;display:none}
+.search ul.on{display:block}
+.search li{padding:7px 9px;border-radius:7px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.search li small{color:var(--muted);white-space:nowrap}
+.search li[aria-selected=true],.search li:hover{background:#eef7f0}
+.hint{color:var(--muted);font-size:12px;padding:0 16px 6px}
+.mapbox{position:relative;height:640px;cursor:grab;touch-action:none;user-select:none;background:linear-gradient(#f9fbfa,#f3f6f4)}
+.mapbox.drag{cursor:grabbing}
+svg#map{width:100%;height:100%;display:block}
+.area{stroke-linejoin:round;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .5s ease,stroke .5s ease}
+.border{fill:none;stroke:#fff;stroke-opacity:.95;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.halo{fill:none;stroke:#1e293b;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.hover{fill:none;stroke:#0f172a;stroke-width:2.5;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.ctx{stroke-linejoin:round;vector-effect:non-scaling-stroke;fill:#e9edeb;stroke:#e9edeb;stroke-width:1;cursor:pointer}
+.ctx:hover{fill:#dfe5e2;stroke:#dfe5e2}
+.dim .area{opacity:.5}
+.lbl{pointer-events:none;text-anchor:middle;font-weight:700;paint-order:stroke;stroke:#fff;stroke-linejoin:round;fill:#0f172a}
+.lbl .nm{font-weight:600;fill:#334155}
+.lbl .up{fill:var(--up)}.lbl .down{fill:var(--down)}.lbl .flat{fill:#64748b}
+.lbl .f{fill:var(--female)}.lbl .m{fill:var(--male)}
+.hot{fill:none;stroke:#f59e0b;stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:none;filter:drop-shadow(0 0 4px rgba(245,158,11,.8));animation:glow 1.8s ease-in-out infinite alternate}
+@keyframes glow{from{stroke-opacity:.45}to{stroke-opacity:1}}
+.badge circle{fill:#f59e0b;stroke:#fff;vector-effect:non-scaling-stroke;stroke-width:1.5}
+.badge text{fill:#fff;font-weight:800;text-anchor:middle;dominant-baseline:central}
+.fac{cursor:pointer;vector-effect:non-scaling-stroke}
+.fac.nodata{fill:#cbd5e1;stroke:#94a3b8}
+.fac:hover{stroke:#0f172a!important;stroke-width:2}
+.pulse{fill:none;stroke-width:2;vector-effect:non-scaling-stroke;animation:pulse 1.8s ease-out infinite;pointer-events:none;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(2.6)}}
+/* movements */
+.arc{fill:none;stroke-linecap:round;vector-effect:non-scaling-stroke;pointer-events:none}
+.arc.base{stroke-opacity:.28}
+.arc.dash{stroke-dasharray:2 14;animation:flow 1.1s linear infinite;stroke-opacity:.95}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.arc-hit{fill:none;stroke:transparent;vector-effect:non-scaling-stroke;cursor:pointer}
+.origin{vector-effect:non-scaling-stroke;cursor:pointer;stroke:#fff;stroke-width:1.5}
+.origin:hover{stroke:#0f172a;stroke-width:2}
+.dest{fill:#0f172a;stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke}
+.zoom{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:4px}
+.zoom button{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:18px;cursor:pointer;color:#334155;box-shadow:0 1px 2px rgba(0,0,0,.06);display:grid;place-items:center}
+.zoom button:hover{border-color:var(--green);color:var(--green)}
+.legend{position:absolute;left:14px;bottom:12px;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:11.5px;color:#475569;min-width:220px;max-width:300px}
+.legend .ramp{height:9px;border-radius:5px;margin:5px 0 3px}
+.legend .ends{display:flex;justify-content:space-between}
+.legend .row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.legend .nd{width:14px;height:10px;border-radius:3px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Crect width='6' height='6' fill='%23eef1f0'/%3E%3Cpath d='M0 6L6 0' stroke='%23c4ccc8' stroke-width='1'/%3E%3C/svg%3E");border:1px solid #d6dbd9}
+.legend .sw{display:inline-block;width:18px;height:4px;border-radius:2px}
+.legend button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 8px;font-size:11.5px;cursor:pointer;color:var(--green-dark)}
+.bigperiod{position:absolute;left:16px;top:8px;font-size:34px;font-weight:800;color:rgba(15,23,42,.12);pointer-events:none;letter-spacing:-.02em}
+.timeline{display:flex;align-items:center;gap:12px;padding:10px 16px 14px;border-top:1px solid var(--line)}
+.play{width:40px;height:40px;border-radius:50%;border:0;background:var(--green);color:#fff;cursor:pointer;display:grid;place-items:center;flex:none}
+.play:hover{background:var(--green-dark)}
+.track{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.track input{width:100%;accent-color:var(--green)}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.plabel{min-width:96px;text-align:right;font-weight:700;font-size:15px}
+.speed{font:inherit;font-size:13px;height:36px;border:1px solid #e2e5ea;border-radius:10px;padding:0 32px 0 12px;-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9l4-4 4 4M16 15l-4 4-4-4'/%3E%3C/svg%3E") no-repeat right 9px center;box-shadow:0 1px 2px rgba(16,24,40,.06);cursor:pointer}
+/* side panel */
+.side{display:flex;flex-direction:column;gap:12px}
+.panel{padding:14px 16px}
+.panel h3{margin:0 0 2px;font-size:14px;display:flex;align-items:center;gap:6px}
+.panel .sub{font-size:12px;color:var(--muted)}
+.kpi{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;border-radius:999px;padding:2px 9px;margin-top:4px}
+.delta.up{background:#fdecec;color:var(--up)}.delta.down{background:#e7f6ea;color:var(--down)}.delta.flat{background:#f1f5f9;color:#475569}
+.sexrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.sexrow div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.sexrow b{font-size:18px}
+.sexrow span{font-size:11.5px;color:var(--muted)}
+.sexbar{display:flex;height:8px;border-radius:5px;overflow:hidden;margin-top:8px;background:#eef1f0}
+.spark{margin-top:10px}
+.spark rect{cursor:pointer}
+.rank{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto}
+.rank li{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;padding:6px;border-radius:8px;cursor:pointer;font-size:13px;align-items:center}
+.rank li:hover{background:#f4f7f5}
+.rank .n{width:20px;height:20px;border-radius:50%;background:#f1f5f9;color:#475569;font-size:11px;font-weight:700;display:grid;place-items:center}
+.rank .n.hot{background:#f59e0b;color:#fff}
+.rank .b{grid-column:2/4;height:5px;border-radius:3px;background:#eef1f0;overflow:hidden;display:flex}
+.rank .b i{display:block;height:100%}
+.rank .v{font-weight:700;text-align:right;white-space:nowrap}
+.rank .v small{font-weight:600;margin-left:4px}
+.rank li.nodata{color:#94a3b8;cursor:default;grid-template-columns:1fr}
+.leftcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:7px 9px;cursor:pointer;background:#fff;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile:hover{border-color:var(--green)}
+.tile.on{border-color:var(--green);background:#f0f9f2;box-shadow:inset 0 0 0 1px var(--green)}
+.tile .t{font-size:11.5px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v{font-size:17px;font-weight:800}
+.tile .s{font-size:10.5px;color:var(--muted)}
+.tile svg{width:100%;height:20px}
+.tgroup{grid-column:1/-1;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667781;margin-top:4px}
+.note{font-size:12px;color:var(--muted);line-height:1.45}
+.note b{color:#334155}
+.status{padding:30px;text-align:center;color:var(--muted)}
+.status.error{color:#b91c1c}
+#tip{position:fixed;pointer-events:none;background:#0f172a;color:#fff;font-size:12.5px;padding:8px 10px;border-radius:9px;opacity:0;transition:opacity .1s;z-index:9;max-width:280px;line-height:1.45}
+#tip b{font-size:13px}
+.loading{position:absolute;inset:0;display:none;place-items:center;background:rgba(255,255,255,.55);font-size:13px;color:#334155}
+.loading.on{display:grid}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card ask">
+    <form id="askForm" autocomplete="off">
+      <div class="in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" placeholder="Ask the map, e.g. HIV positive cases by gender from 2022 to now" aria-label="Ask the map"></div>
+      <button class="go" type="submit">Show on map</button>
+    </form>
+    <div class="chips" id="chips"></div>
+    <div class="understood" id="understood"></div>
+  </div>
+
+  <div class="card controls">
+    <div><label for="ind">Indicator</label><select id="ind"></select></div>
+    <div><label for="from">From</label><input type="month" id="from"></div>
+    <div><label for="to">To</label><input type="month" id="to"></div>
+    <div><span class="lab">Step</span><div class="seg" id="grain"><button data-v="month">Month</button><button data-v="quarter">Quarter</button><button data-v="year">Year</button></div></div>
+    <div><span class="lab">Sex</span><div class="seg" id="sex"><button data-v="all">All</button><button data-v="female"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="9" r="5"/><path d="M12 14v8M9 19h6"/></svg>Female</button><button data-v="male"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/></svg>Male</button><button data-v="compare">Compare</button></div></div>
+    <div><span class="lab">Colour shows</span><div class="seg" id="mode"><button data-v="value">Number</button><button data-v="change">Change</button></div></div>
+    <div><span class="lab">Movement</span><div class="seg" id="move"><button data-v="off">Off</button><button data-v="home">Where patients live</button><button data-v="transfers">Transfers</button></div></div>
+  </div>
+
+  <div class="main">
+   <div class="leftcol">
+    <div class="card mapcard">
+      <div class="bar">
+        <div class="crumbs" id="crumbs"></div>
+        <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="searchList">
+          <input id="search" placeholder="Find a province, district, facility or suburb" aria-label="Find a place" aria-autocomplete="list" aria-controls="searchList">
+          <ul id="searchList" role="listbox"></ul>
+        </div>
+      </div>
+      <div class="hint" id="hint"></div>
+      <div class="mapbox" id="mapbox">
+        <div class="bigperiod" id="bigperiod"></div>
+        <svg id="map" viewBox="0 0 600 552" role="img" aria-label="Map of Zimbabwe"></svg>
+        <div class="zoom"><button id="zin" title="Zoom in" aria-label="Zoom in">+</button><button id="zout" title="Zoom out" aria-label="Zoom out">−</button><button id="zback" title="Back one level (Esc)" aria-label="Back one level"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg></button><button id="zhome" title="Back to Zimbabwe" aria-label="Back to Zimbabwe"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9h-6v-6H9v6H3z"/></svg></button></div>
+        <div class="legend" id="legend"></div>
+        <div class="loading" id="loading">Loading…</div>
+      </div>
+      <div class="timeline">
+        <button class="play" id="play" aria-label="Play"></button>
+        <div class="track"><input type="range" id="slider" min="0" max="0" value="0" aria-label="Period"><div class="ticks" id="ticks"></div></div>
+        <select class="speed" id="speed" aria-label="Speed"><option value="1600">Slow</option><option value="900" selected>Normal</option><option value="450">Fast</option></select>
+        <div class="plabel" id="plabel"></div>
+      </div>
+    </div>
+    <div class="card panel" id="profile"></div>
+   </div>
+    <div class="side">
+      <div class="card panel" id="summary"></div>
+      <div class="card panel" id="ranking"></div>
+      <div class="card panel note" id="about"></div>
+    </div>
+  </div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+// Province and district outlines: geoBoundaries (CC BY 4.0), same projection as the Overview map (600 x 552).
+const PROVINCES=__PROVINCES__;
+const DISTRICTS=__DISTRICTS__;
+const K=81.05493754657579;
+const project=(lon,lat)=>[(lon-25.237597177423254)*.9454384408440947*K,(-15.60714602564883-lat)*K];
+const API='http://127.0.0.1:8765/api';
+const EMBEDDED=window.parent!==window;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n==null?'—':Number(n).toLocaleString('en-GB');
+const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const FEMALE='♀',MALE='♂';
+
+// ---------------------------------------------------------------- geometry
+const parseRings=d=>[...d.matchAll(/M([^Z]+)Z/g)].map(m=>m[1].split('L').map(p=>p.split(',').map(Number)));
+const boxOf=rings=>{const p=rings.flat();return[Math.min(...p.map(q=>q[0])),Math.min(...p.map(q=>q[1])),Math.max(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))]};
+function inRings(x,y,rings){let c=false;for(const r of rings)for(let i=0,j=r.length-1;i<r.length;j=i++){const [x1,y1]=r[i],[x2,y2]=r[j];if((y1>y)!==(y2>y)&&x<(x2-x1)*(y-y1)/(y2-y1)+x1)c=!c}return c}
+const PROV=PROVINCES.map(p=>{const rings=parseRings(p.d);return{...p,key:norm(p.name),rings,box:boxOf(rings)}});
+const DIST=DISTRICTS.map(g=>{const rings=parseRings(g.d);return{...g,key:norm(g.name),rings,box:boxOf(rings)}});
+const hitIn=(x,y,list)=>list.find(g=>x>=g.box[0]&&x<=g.box[2]&&y>=g.box[1]&&y<=g.box[3]&&inRings(x,y,g.rings));
+for(const d of DIST){const p=hitIn(d.cx,d.cy,PROV)||PROV.slice().sort((a,b)=>Math.hypot(a.cx-d.cx,a.cy-d.cy)-Math.hypot(b.cx-d.cx,b.cy-d.cy))[0];d.prov=p.key}
+const PROV_BOX={};for(const p of PROV){const b=DIST.filter(d=>d.prov===p.key).map(d=>d.box);PROV_BOX[p.key]=b.length?[Math.min(...b.map(x=>x[0])),Math.min(...b.map(x=>x[1])),Math.max(...b.map(x=>x[2])),Math.max(...b.map(x=>x[3]))]:p.box}
+
+// ---------------------------------------------------------------- state
+const LABEL={};let INDICATORS=[],dataStart=null,dataEnd=null,geography=null,PLACES=[];
+const S={indicator:'hivPositive',from:'',to:'',grain:'quarter',mode:'value',sex:'all',move:'off',province:null,district:null,facility:null,place:null,transfer:null,type:'',frame:0};
+let data=null,moves=null,profileCache={},playing=false,timer=null,reqSeq=0,moveSeq=0,globalFilters=null,history=[];
+const BAD=new Set(['hivPositive','malariaPositive','maternalDeaths','deaths','stillBirths','tbRegistered']);
+const NATIONAL_LABELS={'Mashonaland East':{x:500,y:248},'Harare':{x:426,y:178,anchor:'end',leader:[428,175,441,182]}};
+
+// ---------------------------------------------------------------- data shaping
+function placed(){
+  for(const f of data.facilities)if(f._xy===undefined){f._xy=f.latitude!=null?project(f.longitude,f.latitude):null;const d=f._xy&&hitIn(f._xy[0],f._xy[1],DIST);f._dist=d?d.key:null;f._prov=norm(f.province)||(d?d.prov:null)}
+  return data.facilities
+}
+const FIELD=()=>S.sex==='female'?'female':S.sex==='male'?'male':'values';
+function sumField(list,field){const n=data.periods.length,rep=list.filter(f=>f.values);return rep.length?rep.reduce((t,f)=>t.map((v,i)=>v+(f[field]||f.values)[i]),Array(n).fill(0)):null}
+function agg(list){const has=list.some(f=>f.values);return has?{values:sumField(list,'values'),male:sumField(list,'male'),female:sumField(list,'female')}:null}
+// The value series the map is showing for an area (respects the sex choice).
+const shown=a=>a.series?(a.series[FIELD()]||a.series.values):null;
+function view(){
+  const fac=placed();
+  if(!S.province)return{level:'province',areas:PROV.map(p=>{const list=fac.filter(f=>f._prov===p.key);return{key:p.key,name:p.name,shape:p,facilities:list.length,reporting:list.filter(f=>f.values).length,series:agg(list)}})};
+  const prov=PROV.find(p=>p.key===S.province),dists=DIST.filter(d=>d.prov===S.province);
+  if(!S.district)return{level:'district',prov,dists,areas:dists.map(d=>{const list=fac.filter(f=>f._dist===d.key);return{key:d.key,name:d.name,shape:d,facilities:list.length,reporting:list.filter(f=>f.values).length,series:agg(list)}})};
+  const dist=DIST.find(d=>d.key===S.district),list=fac.filter(f=>f._dist===S.district);
+  return{level:'facility',prov,dist,dists,areas:list.map(f=>({key:f.id,name:f.name,fac:f,facilities:1,reporting:f.values?1:0,series:f.values?{values:f.values,male:f.male,female:f.female}:null}))}
+}
+function focusSeries(v){
+  const fac=placed();
+  if(S.place&&moves){const o=moves.origins.find(x=>x.id===S.place);return o?{values:o.values,male:o.male,female:o.female}:null}
+  if(v.level==='facility')return S.facility?agg(fac.filter(f=>f.id===S.facility)):agg(fac.filter(f=>f._dist===S.district));
+  if(v.level==='district')return agg(fac.filter(f=>f._prov===S.province));
+  return agg(fac)
+}
+
+// ---------------------------------------------------------------- colour
+const RAMP_BAD=['#fff4d6','#fdd49e','#fc8d59','#e34a33','#b30000','#6b0000'];
+const RAMP_GOOD=['#e6f5e9','#b7e2c0','#7cc68c','#3fa45a','#218a39','#0b4f1e'];
+const RAMP_SEX=['#2563eb','#93b4f5','#f3f4f6','#e7a3c4','#c0367a'];
+function ramp(t,stops){t=Math.max(0,Math.min(1,t));const x=t*(stops.length-1),i=Math.min(stops.length-2,Math.floor(x)),f=x-i;
+  const h=s=>[1,3,5].map(k=>parseInt(s.slice(k,k+2),16)),a=h(stops[i]),b=h(stops[i+1]);return'rgb('+a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')+')'}
+function scaleFor(v){
+  const i=S.frame;
+  if(S.sex==='compare')return{kind:'sex',color:a=>{if(!a.series)return null;const f=a.series.female[i],m=a.series.male[i];if(!f&&!m)return'#f8f6ef';return ramp(f/(f+m),RAMP_SEX)}};
+  const all=v.areas.flatMap(a=>shown(a)||[]),max=Math.max(1,...all);
+  if(S.mode==='change'){
+    const ch=v.areas.flatMap(a=>{const s=shown(a);return s?s.slice(1).map((x,k)=>x-s[k]):[]}),m=Math.max(1,...ch.map(Math.abs));
+    return{kind:'change',max:m,color:a=>{const s=shown(a);if(!s)return null;if(i===0)return'#eef2f7';const d=s[i]-s[i-1];if(!d)return'#f1f5f9';
+      const t=Math.sqrt(Math.abs(d)/m),up=BAD.has(S.indicator)?RAMP_BAD:RAMP_GOOD,down=BAD.has(S.indicator)?RAMP_GOOD:RAMP_BAD;return ramp(.15+.85*t,d>0?up:down)}}
+  }
+  return{kind:'value',max,color:a=>{const s=shown(a);if(!s)return null;const val=s[i];return val===0?'#f8f6ef':ramp(.12+.88*Math.sqrt(val/max),BAD.has(S.indicator)?RAMP_BAD:RAMP_GOOD)}}
+}
+function deltaInfo(vals,i){if(!vals||i===0)return null;const a=vals[i-1],b=vals[i],d=b-a;return{d,pct:a?Math.round(d/a*100):null,cls:d>0?'up':d<0?'down':'flat',arrow:d>0?'▲':d<0?'▼':'■'}}
+const goodBad=info=>!info?'':info.cls==='flat'?'flat':(info.cls==='up')===BAD.has(S.indicator)?'up':'down';
+const sexWord=()=>S.sex==='female'?' (female)':S.sex==='male'?' (male)':'';
+
+// ---------------------------------------------------------------- zoom / pan
+let vb=[0,0,600,552],anim=null;
+function setVB(b){vb=b;$('map').setAttribute('viewBox',b.map(n=>n.toFixed(3)).join(' '));styleScale()}
+function animateTo(target,ms=700){
+  cancelAnimationFrame(anim);const start=vb.slice(),t0=performance.now();
+  const step=t=>{const k=Math.min(1,(t-t0)/ms),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;setVB(start.map((v,i)=>v+(target[i]-v)*e));if(k<1)anim=requestAnimationFrame(step)};
+  anim=requestAnimationFrame(step)
+}
+function fitBox(b,pad=.08,minW=6){
+  let [x0,y0,x1,y1]=b;if(x1-x0<minW){const c=(x0+x1)/2;x0=c-minW/2;x1=c+minW/2}if(y1-y0<minW){const c=(y0+y1)/2;y0=c-minW/2;y1=c+minW/2}
+  const w=x1-x0,h=y1-y0;x0-=w*pad;x1+=w*pad;y0-=h*pad;y1+=h*pad;
+  const box=$('mapbox').getBoundingClientRect(),ar=box.width/box.height||600/552;let W=x1-x0,H=y1-y0;
+  if(W/H<ar){const nw=H*ar;x0-=(nw-W)/2;W=nw}else{const nh=W/ar;y0-=(nh-H)/2;H=nh}
+  return[x0,y0,W,H]
+}
+function targetBox(){
+  if(S.place&&moves){const o=moves.origins.find(x=>x.id===S.place);if(o){const [x,y]=project(o.longitude,o.latitude),d=moves.to&&project(moves.to.longitude,moves.to.latitude);
+    return fitBox(d?[Math.min(x,d[0]),Math.min(y,d[1]),Math.max(x,d[0]),Math.max(y,d[1])]:[x-2,y-2,x+2,y+2],.35,3)}}
+  if(S.transfer&&moves){const t=moves.transfers.find(x=>x.from.id===S.transfer);if(t&&t.from.latitude!=null){const [x,y]=project(t.from.longitude,t.from.latitude),d=project(moves.to.longitude,moves.to.latitude);return fitBox([Math.min(x,d[0]),Math.min(y,d[1]),Math.max(x,d[0]),Math.max(y,d[1])],.2,4)}}
+  if(S.district){const d=DIST.find(x=>x.key===S.district);return fitBox(d.box,.1)}
+  if(S.province)return fitBox(PROV_BOX[S.province],.05);
+  return fitBox([0,0,600,552],.02)
+}
+const px=()=>vb[2]/($('mapbox').clientWidth||600);
+// Text and markers keep the same on-screen size whatever the zoom.
+function styleScale(){
+  const u=px();
+  document.querySelectorAll('#map [data-r]').forEach(n=>{const r=+n.dataset.r*u;if(n.tagName==='circle')n.setAttribute('r',r);else n.setAttribute('transform',`translate(${n.dataset.x},${n.dataset.y}) scale(${r/10})`)});
+  document.querySelectorAll('#map [data-fs]').forEach(n=>{n.setAttribute('font-size',+n.dataset.fs*u);if(n.classList.contains('lbl'))n.setAttribute('stroke-width',3.2*u)});
+  const pat=document.getElementById('nodata');if(pat)pat.setAttribute('patternTransform',`scale(${u*1.4})`);
+  // Suburb labels appear once zoomed in far enough to read them.
+  document.querySelectorAll('#map .olbl').forEach(n=>n.style.display=(vb[2]<60||+n.dataset.rank<6)?'':'none');
+}
+(function panZoom(){
+  const box=$('mapbox');let drag=null,moved=false;
+  const toMap=(cx,cy)=>{const r=box.getBoundingClientRect();return[vb[0]+(cx-r.left)/r.width*vb[2],vb[1]+(cy-r.top)/r.height*vb[3]]};
+  box.addEventListener('wheel',e=>{e.preventDefault();cancelAnimationFrame(anim);const [mx,my]=toMap(e.clientX,e.clientY),k=e.deltaY>0?1.18:1/1.18;
+    const w=Math.min(1400,Math.max(1.2,vb[2]*k)),h=w*vb[3]/vb[2];setVB([mx-(mx-vb[0])*w/vb[2],my-(my-vb[1])*h/vb[3],w,h])},{passive:false});
+  box.addEventListener('pointerdown',e=>{if(e.target.closest('.zoom,.legend'))return;drag={x:e.clientX,y:e.clientY,vb:vb.slice()};moved=false});
+  window.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4){moved=true;box.classList.add('drag')}
+    if(!moved)return;const r=box.getBoundingClientRect();setVB([drag.vb[0]-dx/r.width*vb[2],drag.vb[1]-dy/r.height*vb[3],vb[2],vb[3]])});
+  window.addEventListener('pointerup',()=>{drag=null;box.classList.remove('drag')});
+  box.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+  box.addEventListener('dblclick',e=>{if(!e.target.closest('[data-area],[data-origin],[data-transfer],.zoom'))back()});
+  const zoomBy=k=>{const cx=vb[0]+vb[2]/2,cy=vb[1]+vb[3]/2,w=vb[2]*k,h=vb[3]*k;animateTo([cx-w/2,cy-h/2,w,h],300)};
+  $('zin').onclick=()=>zoomBy(1/1.6);$('zout').onclick=()=>zoomBy(1.6);$('zback').onclick=()=>back();$('zhome').onclick=()=>go({province:null,district:null,facility:null,place:null,transfer:null});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.target.closest('input'))back()});
+})();
+
+// ---------------------------------------------------------------- drawing
+const arcPath=(a,b,bend=.22)=>{const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,dx=b[0]-a[0],dy=b[1]-a[1];return`M${a[0]},${a[1]}Q${mx-dy*bend},${my+dx*bend} ${b[0]},${b[1]}`};
+function draw(){
+  if(!data)return;
+  const v=view(),i=S.frame,sc=scaleFor(v),L={ctx:[],halo:[],areas:[],borders:[],hot:[],facs:[],moves:[],labels:[]};
+  const noFill='url(#nodata)';
+  // Context: neighbouring districts stay visible (and clickable) when zoomed in, drawn from the same
+  // district outlines so borders line up exactly.
+  if(v.level!=='province')for(const d of DIST)if(d.prov!==S.province||(v.level==='facility'&&d.key!==S.district))L.ctx.push(`<path class="ctx" data-ctx="${esc(d.key)}" d="${d.d}" fill-rule="evenodd"/>`);
+  if(v.level!=='facility'){
+    // Each area is stroked in its own colour so neighbouring fills meet with no gaps, then thin
+    // white borders are drawn on top. A dark halo underneath outlines the province when zoomed in.
+    if(v.level==='district')for(const a of v.areas)L.halo.push(`<path class="halo" d="${a.shape.d}" fill-rule="evenodd" stroke-width="3.5"/>`);
+    for(const a of v.areas){
+      const fill=sc.color(a);
+      L.areas.push(`<path class="area" data-area="${esc(a.key)}" d="${a.shape.d}" fill-rule="evenodd" fill="${fill||noFill}" stroke="${fill||'#e9edeb'}" stroke-width="1.2"/>`);
+      L.borders.push(`<path class="border" d="${a.shape.d}" fill-rule="evenodd" stroke-width="${v.level==='province'?1.2:.9}"/>`);
+    }
+    // Hotspots: the three highest areas this period glow and carry a rank.
+    const hot=S.sex!=='compare'&&S.mode==='value'?v.areas.filter(a=>shown(a)&&shown(a)[i]>0).sort((a,b)=>shown(b)[i]-shown(a)[i]).slice(0,3):[];
+    hot.forEach((a,k)=>{L.hot.push(`<path class="hot" d="${a.shape.d}" fill-rule="evenodd"/>`)});
+    for(const a of v.areas){
+      const s=shown(a),val=s?s[i]:null,info=s?deltaInfo(s,i):null;
+      const o=v.level==='province'&&NATIONAL_LABELS[a.name]||{},cx=o.x??a.shape.cx,cy=o.y??a.shape.cy;
+      if(o.leader)L.labels.push(`<path d="M${o.leader[0]} ${o.leader[1]}L${o.leader[2]} ${o.leader[3]}" stroke="#334155" stroke-width="1" style="vector-effect:non-scaling-stroke"/>`);
+      const name=v.level==='province'||s?`<tspan class="nm" x="${cx}" dy="0">${esc(a.name)}</tspan>`:'';
+      let num='';
+      if(s&&S.sex==='compare')num=`<tspan x="${cx}" dy="1.3em" font-size="1.3em"><tspan class="f">${FEMALE} ${fmt(a.series.female[i])}</tspan>  <tspan class="m">${MALE} ${fmt(a.series.male[i])}</tspan></tspan>`;
+      else if(s)num=`<tspan x="${cx}" dy="1.3em" font-size="1.45em">${fmt(val)}</tspan>${info&&info.d?`<tspan class="${goodBad(info)}" dx="0.3em" font-size="0.85em">${info.arrow}${info.pct!=null?Math.abs(info.pct)+'%':''}</tspan>`:''}`;
+      if(S.move!=='off'&&moves)continue; // movement lines carry their own labels
+      if(name||num)L.labels.push(`<text class="lbl"${o.anchor?` style="text-anchor:${o.anchor}"`:''} data-fs="${v.level==='province'?12.5:13}" x="${cx}" y="${cy}">${name}${num}</text>`);
+      const rank=hot.indexOf(a);
+      if(rank>=0)L.labels.push(`<text class="lbl" data-fs="11.5" x="${cx}" y="${cy}" dy="-1.5em" style="fill:#b45309${o.anchor?`;text-anchor:${o.anchor}`:''}">★ ${rank+1}</text>`);
+    }
+  }else{
+    L.halo.push(`<path class="halo" d="${v.dist.d}" fill-rule="evenodd" stroke-width="3.5"/>`);
+    L.areas.push(`<path class="area" d="${v.dist.d}" fill-rule="evenodd" fill="#f6f8f7" stroke="#f6f8f7" stroke-width="1.2" data-up="1" style="cursor:zoom-out"/>`);
+    const max=Math.max(1,...v.areas.flatMap(a=>shown(a)||[]));
+    for(const a of v.areas.filter(a=>a.fac._xy).sort((a,b)=>(!!a.series)-(!!b.series))){
+      const [x,y]=a.fac._xy,s=shown(a),val=s?s[i]:null,fill=s?sc.color(a):null,hosp=a.fac.typeGroup==='Hospital',r=s?8+10*Math.sqrt((val||0)/max):5;
+      if(hosp)L.facs.push(`<path class="fac${s?'':' nodata'}" data-area="${esc(a.key)}" data-r="${r}" data-x="${x}" data-y="${y}" d="M-3.5-10h7v6.5h6.5v7h-6.5v6.5h-7v-6.5h-6.5v-7h6.5z" fill="${fill||''}" stroke="${s?'#0f172a':''}" stroke-width="1"/>`);
+      else L.facs.push(`<circle class="fac${s?'':' nodata'}" data-area="${esc(a.key)}" cx="${x}" cy="${y}" data-r="${r}" fill="${fill||''}" stroke="${s?'#0f172a':''}" stroke-width="1"/>`);
+      if(s){
+        L.facs.push(`<circle class="pulse" cx="${x}" cy="${y}" data-r="${r}" stroke="${BAD.has(S.indicator)?'#c62f2f':'#218a39'}"/>`);
+        const info=deltaInfo(s,i);
+        const num=S.sex==='compare'?`<tspan x="${x}" dy="1.25em" font-size="1.2em"><tspan class="f">${FEMALE} ${fmt(a.series.female[i])}</tspan>  <tspan class="m">${MALE} ${fmt(a.series.male[i])}</tspan></tspan>`:`<tspan x="${x}" dy="1.25em" font-size="1.35em">${fmt(val)}</tspan>${info&&info.d?`<tspan class="${goodBad(info)}" dx="0.3em" font-size="0.85em">${info.arrow}${info.pct!=null?Math.abs(info.pct)+'%':''}</tspan>`:''}`;
+        L.labels.push(`<text class="lbl" data-fs="13" x="${x}" y="${y}"><tspan class="nm" x="${x}" dy="-2.3em">${esc(a.name)}</tspan>${num}</text>`);
+      }
+      if(S.facility===a.key)L.facs.push(`<circle cx="${x}" cy="${y}" data-r="${r+5}" fill="none" stroke="#0f172a" stroke-width="2" stroke-dasharray="3 2" style="vector-effect:non-scaling-stroke"/>`);
+    }
+  }
+  if(moves&&S.move!=='off')drawMoves(L);
+  $('map').innerHTML=`<defs><pattern id="nodata" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#eef1f0"/><path d="M0 6L6 0" stroke="#d3d9d6" stroke-width=".8"/></pattern>
+    <marker id="arrowF" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--flow)"/></marker>
+    <marker id="arrowT" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--transfer)"/></marker></defs>`+
+    `<g id="gctx">${L.ctx.join('')}</g><g id="ghalo">${L.halo.join('')}</g><g id="gareas" class="${S.move!=='off'?'dim':''}">${L.areas.join('')}</g><g>${L.borders.join('')}</g><g>${L.hot.join('')}</g><g id="ghover"></g><g>${L.facs.join('')}</g><g>${L.moves.join('')}</g><g>${L.labels.join('')}</g>`;
+  styleScale();bindMap(v);
+  $('bigperiod').textContent=$('plabel').textContent=data.periods[i]?.label||'';
+  $('slider').value=i;
+  legend(v,sc);summary(v);ranking(v);crumbs(v);renderProfile(v);
+}
+function drawMoves(L){
+  const i=S.frame,dest=moves.to&&moves.to.latitude!=null?project(moves.to.longitude,moves.to.latitude):null;if(!dest)return;
+  if(S.move==='home'){
+    const field=S.sex==='female'?'female':S.sex==='male'?'male':'values';
+    const list=moves.origins.map(o=>({...o,v:o[field][i],xy:project(o.longitude,o.latitude)})).filter(o=>o.v>0).sort((a,b)=>a.v-b.v);
+    const max=Math.max(1,...list.map(o=>o.v));
+    for(const o of list){
+      const w=1.2+7*Math.sqrt(o.v/max),d=arcPath(o.xy,dest),sel=S.place===o.id,dim=S.place&&!sel;
+      L.moves.push(`<path class="arc base" d="${d}" stroke="var(--flow)" stroke-width="${w}" ${dim?'stroke-opacity=".08"':''}/>`);
+      if(!dim)L.moves.push(`<path class="arc dash" d="${d}" stroke="${sel?'#f59e0b':'#ecfeff'}" stroke-width="${Math.max(1.5,w*.6)}" style="animation-duration:${(2.2-1.4*Math.sqrt(o.v/max)).toFixed(2)}s"/>`);
+      L.moves.push(`<path class="arc-hit" data-origin="${esc(o.id)}" d="${d}" stroke-width="${w+8}"/>`);
+    }
+    const ranked=list.slice().sort((a,b)=>b.v-a.v);
+    for(const o of list){
+      const r=3+9*Math.sqrt(o.v/max),rank=ranked.indexOf(o),sel=S.place===o.id;
+      const fill=S.sex==='compare'?ramp(o.female[i]/Math.max(1,o.female[i]+o.male[i]),RAMP_SEX):'var(--flow)';
+      L.moves.push(`<circle class="origin" data-origin="${esc(o.id)}" cx="${o.xy[0]}" cy="${o.xy[1]}" data-r="${r}" fill="${fill}" ${sel?'stroke="#f59e0b" stroke-width="3"':''} ${S.place&&!sel?'opacity=".35"':''}/>`);
+      L.labels.push(`<text class="lbl olbl" data-rank="${sel?0:rank}" data-fs="11.5" x="${o.xy[0]}" y="${o.xy[1]}" dy="-${(r+4)/11.5+.2}em"><tspan class="nm">${esc(o.name)}</tspan> <tspan>${fmt(o.v)}</tspan></text>`);
+    }
+  }else{
+    const list=moves.transfers.filter(t=>t.from.latitude!=null&&t.values[i]>0).map(t=>({...t,v:t.values[i],xy:project(t.from.longitude,t.from.latitude)}));
+    const max=Math.max(1,...list.map(t=>t.v));
+    for(const t of list){
+      const w=1.5+6*Math.sqrt(t.v/max),d=arcPath(t.xy,dest,.3),sel=S.transfer===t.from.id;
+      L.moves.push(`<path class="arc base" d="${d}" stroke="var(--transfer)" stroke-width="${w}"/>`,`<path class="arc dash" d="${d}" stroke="${sel?'#f59e0b':'#f5f3ff'}" stroke-width="${Math.max(1.5,w*.6)}"/>`,`<path class="arc-hit" data-transfer="${esc(t.from.id)}" d="${d}" stroke-width="${w+8}"/>`);
+      L.moves.push(`<circle class="origin" data-transfer="${esc(t.from.id)}" cx="${t.xy[0]}" cy="${t.xy[1]}" data-r="${4+6*Math.sqrt(t.v/max)}" fill="var(--transfer)" ${sel?'stroke="#f59e0b" stroke-width="3"':''}/>`);
+      L.labels.push(`<text class="lbl olbl" data-rank="0" data-fs="11" x="${t.xy[0]}" y="${t.xy[1]}" dy="-1.2em"><tspan class="nm">${esc(t.from.name)}</tspan> <tspan>${fmt(t.v)}</tspan></text>`);
+    }
+  }
+  L.moves.push(`<circle class="pulse" cx="${dest[0]}" cy="${dest[1]}" data-r="10" stroke="#0f172a"/><circle class="dest" cx="${dest[0]}" cy="${dest[1]}" data-r="6"/>`);
+  L.labels.push(`<text class="lbl" data-fs="12.5" x="${dest[0]}" y="${dest[1]}" dy="1.9em">${esc(moves.to.name)}</text>`);
+}
+function legend(v,sc){
+  const bad=BAD.has(S.indicator),r=bad?RAMP_BAD:RAMP_GOOD,per=data.grain;
+  const shapes=v.level==='facility'?`<div class="row"><span>● Clinic</span><span>✚ Hospital</span><span style="color:#94a3b8">● no data</span></div>`:'';
+  let move='';
+  if(S.move==='home'&&moves){const n=moves.origins.reduce((t,o)=>t+o.values[S.frame],0),u=moves.unrecognised[S.frame]+moves.noAddress[S.frame];
+    move=`<div class="row"><span class="sw" style="background:var(--flow)"></span>Home → clinic (${fmt(n)} placed${u?`, ${fmt(u)} without a recognised address`:''})</div><div class="row"><button id="fitMoves">Zoom to where patients live</button></div>`}
+  if(S.move==='transfers'&&moves)move=`<div class="row"><span class="sw" style="background:var(--transfer)"></span>Transfers in from other facilities</div>`;
+  let body;
+  if(sc.kind==='sex')body=`<b>Female share</b> of ${esc(LABEL[S.indicator])}<div class="ramp" style="background:linear-gradient(90deg,${RAMP_SEX.join(',')})"></div><div class="ends"><span style="color:var(--male)">${MALE} mostly male</span><span style="color:var(--female)">mostly female ${FEMALE}</span></div>`;
+  else if(sc.kind==='change'){const up=bad?RAMP_BAD:RAMP_GOOD,down=bad?RAMP_GOOD:RAMP_BAD;body=`<b>Change from previous ${per}</b>${sexWord()}<div class="ramp" style="background:linear-gradient(90deg,${down.slice(1).reverse().join(',')},#f1f5f9,${up.slice(1).join(',')})"></div><div class="ends"><span>▼ ${fmt(sc.max)}</span><span>no change</span><span>▲ ${fmt(sc.max)}</span></div>`}
+  else body=`<b>${esc(LABEL[S.indicator])}</b>${sexWord()} per ${per}<div class="ramp" style="background:linear-gradient(90deg,${r.join(',')})"></div><div class="ends"><span>0</span><span>${fmt(sc.max)}</span></div><div class="row"><span style="color:#b45309">★</span> highest areas this ${per}</div>`;
+  $('legend').innerHTML=body+`<div class="row"><span class="nd"></span>No data loaded</div>`+shapes+move;
+  const fit=$('fitMoves');if(fit)fit.onclick=fitMoves;
+}
+function fitMoves(){
+  if(!moves)return;const i=S.frame,list=moves.origins.filter(o=>o.values[i]>0).sort((a,b)=>b.values[i]-a.values[i]);const tot=list.reduce((t,o)=>t+o.values[i],0);let acc=0;const keep=[];
+  for(const o of list){keep.push(project(o.longitude,o.latitude));acc+=o.values[i];if(acc>=tot*.9)break}
+  if(moves.to)keep.push(project(moves.to.longitude,moves.to.latitude));if(!keep.length)return;
+  animateTo(fitBox([Math.min(...keep.map(p=>p[0])),Math.min(...keep.map(p=>p[1])),Math.max(...keep.map(p=>p[0])),Math.max(...keep.map(p=>p[1]))],.12,2))
+}
+function placeName(v){
+  if(S.place&&moves){const o=moves.origins.find(x=>x.id===S.place);if(o)return`Patients living in ${o.name}`}
+  return v.level==='facility'?(S.facility?v.areas.find(a=>a.key===S.facility)?.name:null)||v.dist.name+' district':v.level==='district'?v.prov.name+' province':'Zimbabwe'
+}
+function summary(v){
+  const ser=focusSeries(v),i=S.frame,p=data.periods[i],title=placeName(v);
+  if(S.transfer&&moves){const t=moves.transfers.filter(x=>x.from.id===S.transfer);if(t.length){const vals=t.reduce((a,x)=>a.map((y,k)=>y+x.values[k]),Array(data.periods.length).fill(0));
+    $('summary').innerHTML=`<h3>Transfers from ${esc(t[0].from.name)}</h3><div class="sub">${esc(t.map(x=>x.kind).join(' and '))} to ${esc(moves.to.name)} · ${esc(p.label)}</div><div class="kpi">${fmt(vals[i])}</div>${sparkSvg(vals)}<div class="note">${fmt(vals.reduce((a,b)=>a+b,0))} transfers in the whole period${t[0].from.district?`. ${esc(t[0].from.name)} is in ${esc(t[0].from.district)}, ${esc(t[0].from.province)}`:''}.</div>`;bindSpark();return}}
+  if(!ser){$('summary').innerHTML=`<h3>${esc(title)}</h3><div class="sub">${esc(LABEL[S.indicator])} · ${esc(p.label)}</div><div class="kpi" style="color:#94a3b8">No data</div><div class="note" style="margin-top:6px">No facility here has data loaded yet.</div>`;return}
+  const s=ser[FIELD()]||ser.values,info=deltaInfo(s,i),cls=goodBad(info),f=ser.female[i],m=ser.male[i];
+  const sum=s.reduce((a,b)=>a+b,0),peak=s.indexOf(Math.max(...s));
+  $('summary').innerHTML=`<h3>${esc(title)}</h3><div class="sub">${esc(LABEL[S.indicator])}${sexWord()} · ${esc(p.label)}</div>
+    <div class="kpi">${fmt(s[i])}</div>
+    ${info?`<span class="delta ${cls}">${info.arrow} ${info.d>0?'+':''}${fmt(info.d)}${info.pct!=null?` (${info.pct>0?'+':''}${info.pct}%)`:''} vs ${esc(data.periods[i-1].label)}</span>`:'<span class="delta flat">First period</span>'}
+    <div class="sexrow"><div><span style="color:var(--female);font-size:20px">${FEMALE}</span><span><b style="color:var(--female)">${fmt(f)}</b><br>female${f+m?` · ${Math.round(f/(f+m)*100)}%`:''}</span></div><div><span style="color:var(--male);font-size:20px">${MALE}</span><span><b style="color:var(--male)">${fmt(m)}</b><br>male${f+m?` · ${Math.round(m/(f+m)*100)}%`:''}</span></div></div>
+    ${f+m?`<div class="sexbar"><i style="width:${f/(f+m)*100}%;background:var(--female)"></i><i style="width:${m/(f+m)*100}%;background:var(--male)"></i></div>`:''}
+    ${S.sex==='compare'?sparkSex(ser):sparkSvg(s)}
+    <div class="note">${fmt(sum)} in total, ${esc(data.periods[0].label)} – ${esc(data.periods.at(-1).label)}. Highest: <b>${esc(data.periods[peak].label)}</b> (${fmt(s[peak])}). Click a bar to jump there.</div>`;
+  bindSpark();
+}
+function sparkSvg(s){const W=300,H=64,max=Math.max(1,...s),bw=W/s.length,col=BAD.has(S.indicator)?'#c62f2f':'#218a39';
+  return`<svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">${s.map((x,k)=>`<rect data-frame="${k}" x="${k*bw+1}" y="${H-(x/max)*(H-6)}" width="${Math.max(1,bw-2)}" height="${Math.max(1,(x/max)*(H-6))}" rx="2" fill="${k===S.frame?col:'#cbd5e1'}"><title>${esc(data.periods[k].label)}: ${fmt(x)}</title></rect>`).join('')}</svg>`}
+function sparkSex(ser){const W=300,H=64,n=ser.values.length,max=Math.max(1,...ser.female,...ser.male),bw=W/n;
+  return`<svg class="spark" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">${ser.female.map((f,k)=>{const m=ser.male[k],o=k===S.frame?1:.45;return`<rect data-frame="${k}" x="${k*bw+1}" y="${H-(f/max)*(H-6)}" width="${Math.max(1,bw/2-1)}" height="${Math.max(1,(f/max)*(H-6))}" fill="var(--female)" opacity="${o}"><title>${esc(data.periods[k].label)}: ${FEMALE} ${fmt(f)}</title></rect><rect data-frame="${k}" x="${k*bw+bw/2}" y="${H-(m/max)*(H-6)}" width="${Math.max(1,bw/2-1)}" height="${Math.max(1,(m/max)*(H-6))}" fill="var(--male)" opacity="${o}"><title>${esc(data.periods[k].label)}: ${MALE} ${fmt(m)}</title></rect>`}).join('')}</svg>`}
+function bindSpark(){$('summary').querySelectorAll('[data-frame]').forEach(r=>r.onclick=()=>{stop();setFrame(+r.dataset.frame)})}
+function ranking(v){
+  const i=S.frame;
+  if(S.move==='home'&&moves){
+    const field=S.sex==='female'?'female':S.sex==='male'?'male':'values',list=moves.origins.filter(o=>o[field][i]>0).sort((a,b)=>b[field][i]-a[field][i]),max=Math.max(1,...list.map(o=>o[field][i])),tot=list.reduce((t,o)=>t+o[field][i],0);
+    $('ranking').innerHTML=`<h3>Where patients live</h3><div class="sub">${esc(LABEL[S.indicator])}${sexWord()} · ${esc(data.periods[i].label)} · click to follow</div><ul class="rank">${list.slice(0,40).map((o,k)=>`<li data-origin="${esc(o.id)}"><span class="n${k<3?' hot':''}">${k+1}</span><span>${esc(o.name)} <small style="color:#94a3b8">${o.kind}</small></span><span class="v">${fmt(o[field][i])}<small style="color:#64748b">${Math.round(o[field][i]/tot*100)}%</small></span><span class="b">${S.sex==='compare'?`<i style="width:${o.female[i]/max*100}%;background:var(--female)"></i><i style="width:${o.male[i]/max*100}%;background:var(--male)"></i>`:`<i style="width:${o[field][i]/max*100}%;background:var(--flow)"></i>`}</span></li>`).join('')||'<li class="nodata">Nobody counted in this period</li>'}</ul>`;
+    $('ranking').querySelectorAll('[data-origin]').forEach(n=>n.onclick=()=>pickOrigin(n.dataset.origin));return}
+  if(S.move==='transfers'&&moves){
+    const list=moves.transfers.filter(t=>t.values[i]>0).sort((a,b)=>b.values[i]-a.values[i]),max=Math.max(1,...list.map(t=>t.values[i]));
+    $('ranking').innerHTML=`<h3>Transfers in</h3><div class="sub">${esc(data.periods[i].label)} · into ${esc(moves.to?.name||'')}</div><ul class="rank">${list.map((t,k)=>`<li data-transfer="${esc(t.from.id)}"><span class="n">${k+1}</span><span>${esc(t.from.name)} <small style="color:#94a3b8">${esc(t.kind)}${t.from.latitude==null?' · no map location':''}</small></span><span class="v">${fmt(t.values[i])}</span><span class="b"><i style="width:${t.values[i]/max*100}%;background:var(--transfer)"></i></span></li>`).join('')||'<li class="nodata">No transfers in this period</li>'}</ul>`;
+    $('ranking').querySelectorAll('[data-transfer]').forEach(n=>n.onclick=()=>pickTransfer(n.dataset.transfer));return}
+  const title=v.level==='province'?'Provinces':v.level==='district'?'Districts in '+v.prov.name:'Facilities in '+v.dist.name;
+  const rows=v.areas.map(a=>({...a,s:shown(a)})).map(a=>({...a,val:a.s?a.s[i]:null,info:a.s?deltaInfo(a.s,i):null}));
+  const withData=rows.filter(r=>r.s).sort((a,b)=>b.val-a.val),none=rows.filter(r=>!r.s),max=Math.max(1,...withData.map(r=>S.sex==='compare'?r.series.female[i]+r.series.male[i]:r.val)),col=BAD.has(S.indicator)?'#e34a33':'#3fa45a';
+  const li=(r,k)=>`<li data-pick="${esc(r.key)}"><span class="n${k<3&&r.val>0&&S.sex!=='compare'?' hot':''}">${k+1}</span><span>${esc(r.name)}</span><span class="v">${S.sex==='compare'?`<span style="color:var(--female)">${FEMALE}${fmt(r.series.female[i])}</span> <span style="color:var(--male)">${MALE}${fmt(r.series.male[i])}</span>`:fmt(r.val)}${S.sex!=='compare'&&r.info&&r.info.d?`<small style="color:${goodBad(r.info)==='up'?'var(--up)':goodBad(r.info)==='down'?'var(--down)':'#64748b'}">${r.info.arrow}${r.info.pct!=null?Math.abs(r.info.pct)+'%':''}</small>`:''}</span><span class="b">${S.sex==='compare'?`<i style="width:${r.series.female[i]/max*100}%;background:var(--female)"></i><i style="width:${r.series.male[i]/max*100}%;background:var(--male)"></i>`:`<i style="width:${r.val/max*100}%;background:${col}"></i>`}</span></li>`;
+  const noneTxt=none.length?`<li class="nodata"><span>${none.length} ${v.level==='facility'?'facilities':v.level==='district'?'districts':'provinces'} with no data loaded yet</span></li>`:'';
+  const top=withData[0];
+  $('ranking').innerHTML=`<h3>${esc(title)}</h3><div class="sub">${esc(data.periods[i].label)} · ${top&&top.val>0?`most: <b>${esc(top.name)}</b>`:'nothing recorded this period'} · ${v.level==='facility'?'click a facility':'click to zoom in'}</div><ul class="rank">${withData.map(li).join('')}${noneTxt}</ul>`;
+  $('ranking').querySelectorAll('[data-pick]').forEach(n=>n.onclick=()=>pick(v,n.dataset.pick));
+}
+// ---------------------------------------------------------------- area profile: every indicator for the place in focus
+async function getProfile(place){
+  const key=[S.from,S.to,S.grain,place||''].join('|');
+  if(!profileCache[key])profileCache[key]=fetch(`${API}/geo/profile?${rangeQuery({place:place||''})}`,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  return profileCache[key]
+}
+async function renderProfile(v){
+  const i=S.frame,title=placeName(v);
+  // Areas with no reporting facility have nothing to profile.
+  const fac=placed(),inFocus=S.place?null:v.level==='facility'?(S.facility?fac.filter(f=>f.id===S.facility):fac.filter(f=>f._dist===S.district)):v.level==='district'?fac.filter(f=>f._prov===S.province):fac;
+  if(!S.place&&!inFocus.some(f=>f.values)){$('profile').innerHTML=`<h3>Area profile</h3><div class="sub">${esc(title)}</div><div class="note" style="margin-top:8px">No facility here has data loaded yet.</div>`;return}
+  const p=await getProfile(S.place);if(!p||!data||p.periods.length!==data.periods.length)return;
+  const groups=[...new Set(INDICATORS.map(x=>x.group))];
+  const tile=x=>{const s=p.indicators[x.key];const vals=S.sex==='female'?s.female:S.sex==='male'?s.male:s.total;const max=Math.max(1,...vals),n=vals.length;
+    const pts=vals.map((y,k)=>`${(k/(Math.max(1,n-1)))*100},${19-(y/max)*17}`).join(' ');
+    return`<button class="tile${x.key===S.indicator?' on':''}" data-ind="${x.key}"><span class="t">${esc(x.label)}</span><span class="v">${fmt(vals[i])}</span><span class="s">${fmt(vals.reduce((a,b)=>a+b,0))} in all · ${FEMALE}${fmt(s.female[i])} ${MALE}${fmt(s.male[i])}</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${BAD.has(x.key)?'#e34a33':'#3fa45a'}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg></button>`};
+  $('profile').innerHTML=`<h3>Area profile</h3><div class="sub">${esc(title)} · ${esc(data.periods[i].label)}${sexWord()} · click to map it</div><div class="tiles">${groups.map(g=>`<div class="tgroup">${esc(g)}</div>`+INDICATORS.filter(x=>x.group===g).map(tile).join('')).join('')}</div>`;
+  $('profile').querySelectorAll('[data-ind]').forEach(b=>b.onclick=()=>{S.indicator=b.dataset.ind;syncControls();load()});
+}
+function about(){
+  const ind=INDICATORS.find(x=>x.key===S.indicator),rep=data.facilities.filter(f=>f.values);
+  $('about').innerHTML=`<b>${esc(ind.label)}</b>: ${esc(ind.definition)}<br><br>
+   Data is loaded for <b>${fmt(rep.length)}</b> of ${fmt(data.facilities.length)} facilities in this selection${rep.length&&rep.length<=3?` (${rep.map(f=>esc(f.name)).join(', ')})`:''}. Grey hatched areas have no data yet, which is not the same as zero.
+   <br><br><b>Where patients live</b> reads each patient's home address and places it at the suburb or town it names (list in <b>api/places.csv</b>; suburb points are approximate centres). <b>Transfers</b> come from the ART and TB transfer-in registers.
+   <br><br>Click an area to zoom in and click it again to come back out. Esc, double-click or ↶ goes back one level. Drag to move, scroll to zoom.`;
+}
+function crumbs(v){
+  const parts=[S.province||S.place||S.transfer?`<button data-c="home">Zimbabwe</button>`:'<b>Zimbabwe</b>'];
+  if(S.province)parts.push('<span class="sep">›</span>',S.district?`<button data-c="prov">${esc(v.prov.name)}</button>`:`<b>${esc(v.prov.name)}</b>`);
+  if(S.district)parts.push('<span class="sep">›</span>',S.facility?`<button data-c="dist">${esc(v.dist.name)}</button>`:`<b>${esc(v.dist.name)}</b>`);
+  if(S.facility){const f=data.facilities.find(x=>x.id===S.facility);if(f)parts.push('<span class="sep">›</span>',`<b>${esc(f.name)}</b>`)}
+  if(S.place&&moves){const o=moves.origins.find(x=>x.id===S.place);if(o)parts.push('<span class="sep">›</span>',`<b>Living in ${esc(o.name)}</b>`)}
+  if(S.transfer&&moves){const t=moves.transfers.find(x=>x.from.id===S.transfer);if(t)parts.push('<span class="sep">›</span>',`<b>From ${esc(t.from.name)}</b>`)}
+  $('crumbs').innerHTML=parts.join('');
+  $('hint').textContent=S.move==='home'?'Lines flow from where patients live to the clinic. Click a suburb or town to follow it; click it again to come back.':S.move==='transfers'?'Lines flow from the facility a patient transferred from. Click one to follow it.':!S.province?'Click a province to zoom into its districts.':!S.district?'Click a district to see its facilities. Click the province border area again, or press Esc, to come back.':'Click a facility for its trend. Esc or ↶ goes back.';
+  $('crumbs').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>b.dataset.c==='home'?go({province:null,district:null,facility:null,place:null,transfer:null}):b.dataset.c==='prov'?go({district:null,facility:null,place:null}):go({facility:null,place:null}));
+}
+function tipAt(e,html){const t=$('tip');t.innerHTML=html;t.style.opacity=1;t.style.left=Math.min(innerWidth-290,e.clientX+14)+'px';t.style.top=(e.clientY+14)+'px'}
+const hideTip=()=>$('tip').style.opacity=0;
+function bindMap(v){
+  const i=S.frame;
+  $('map').querySelectorAll('[data-area]').forEach(n=>{
+    const a=v.areas.find(x=>x.key===n.dataset.area);if(!a)return;
+    n.addEventListener('mouseenter',()=>{if(a.shape)$('ghover').innerHTML=`<path class="hover" d="${a.shape.d}" fill-rule="evenodd"/>`});
+    n.addEventListener('mousemove',e=>{const s=shown(a),val=s?s[i]:null,info=s?deltaInfo(s,i):null;
+      tipAt(e,`<b>${esc(a.name)}</b><br>${s?`${esc(LABEL[S.indicator])}${sexWord()}: <b>${fmt(val)}</b> in ${esc(data.periods[i].label)}${info?`<br>${info.arrow} ${info.d>0?'+':''}${fmt(info.d)} vs ${esc(data.periods[i-1].label)}`:''}<br><span style="color:#f9a8d4">${FEMALE} ${fmt(a.series.female[i])}</span> · <span style="color:#93c5fd">${MALE} ${fmt(a.series.male[i])}</span>`:'No data loaded yet'}${v.level!=='facility'?`<br><span style="opacity:.75">${fmt(a.facilities)} facilities · ${fmt(a.reporting)} with data</span>`:`<br><span style="opacity:.75">${esc(a.fac.typeLabel||'')}</span>`}`)});
+    n.addEventListener('mouseleave',()=>{hideTip();$('ghover').innerHTML=''});
+    n.addEventListener('click',()=>{hideTip();pick(v,a.key)});
+  });
+  $('map').querySelectorAll('[data-up]').forEach(n=>n.addEventListener('click',()=>back()));
+  // Clicking the faded neighbourhood moves there (a district in another province, or back up).
+  $('map').querySelectorAll('[data-ctx]').forEach(n=>n.addEventListener('click',()=>{const d=DIST.find(x=>x.key===n.dataset.ctx);if(!d)return;
+    if(v.level==='facility'&&d.prov===S.province)go({district:d.key,facility:null,place:null});else go({province:d.prov,district:null,facility:null,place:null})}));
+  if(moves){
+    $('map').querySelectorAll('[data-origin]').forEach(n=>{const o=moves.origins.find(x=>x.id===n.dataset.origin);if(!o)return;
+      n.addEventListener('mousemove',e=>tipAt(e,`<b>${esc(o.name)}</b> → ${esc(moves.to.name)}<br>${esc(LABEL[S.indicator])}: <b>${fmt(o.values[i])}</b> in ${esc(data.periods[i].label)}<br><span style="color:#f9a8d4">${FEMALE} ${fmt(o.female[i])}</span> · <span style="color:#93c5fd">${MALE} ${fmt(o.male[i])}</span><br><span style="opacity:.7">${o.kind==='suburb'?'Suburb centre is approximate':esc(o.source)}</span>`));
+      n.addEventListener('mouseleave',hideTip);n.addEventListener('click',e=>{e.stopPropagation();hideTip();pickOrigin(o.id)})});
+    $('map').querySelectorAll('[data-transfer]').forEach(n=>{const t=moves.transfers.filter(x=>x.from.id===n.dataset.transfer);if(!t.length)return;
+      n.addEventListener('mousemove',e=>tipAt(e,`<b>${esc(t[0].from.name)}</b> → ${esc(moves.to.name)}<br>${t.map(x=>`${esc(x.kind)}: <b>${fmt(x.values[i])}</b>`).join('<br>')} in ${esc(data.periods[i].label)}`));
+      n.addEventListener('mouseleave',hideTip);n.addEventListener('click',e=>{e.stopPropagation();hideTip();pickTransfer(t[0].from.id)})});
+  }
+}
+// ---------------------------------------------------------------- navigation: click to zoom in, click again to come back
+function pick(v,key){
+  if(v.level==='province')go({province:key,district:null,facility:null,place:null});
+  else if(v.level==='district')go(S.district===key?{district:null}:{district:key,facility:null,place:null});
+  else go({facility:S.facility===key?null:key});
+}
+function pickOrigin(id){if(S.place===id)return back();if(S.move!=='home')S.move='home';syncControls();go({place:id,transfer:null})}
+function pickTransfer(id){if(S.transfer===id)return back();go({transfer:id,place:null})}
+function snapshot(){return{province:S.province,district:S.district,facility:S.facility,place:S.place,transfer:S.transfer}}
+function back(){
+  if(history.length){go(history.pop(),{record:false});return}
+  if(S.place||S.transfer)go({place:null,transfer:null},{record:false});
+  else if(S.facility)go({facility:null},{record:false});
+  else if(S.district)go({district:null},{record:false});
+  else if(S.province)go({province:null},{record:false});
+}
+function go(patch,{zoom=true,sync=true,record=true}={}){
+  const before=snapshot();
+  if(record&&Object.keys(patch).some(k=>patch[k]!==before[k])){history.push(before);if(history.length>30)history.shift()}
+  const provChanged='province' in patch&&patch.province!==S.province;
+  Object.assign(S,patch);
+  if(zoom)animateTo(targetBox());
+  draw();
+  if(sync&&EMBEDDED&&provChanged){const p=S.province&&geography.provinces.find(x=>norm(x.name)===S.province);
+    parent.postMessage({type:'impilo-set-filters',patch:{province:p?p.id:'',district:'',facility:''}},'*')}
+}
+
+// ---------------------------------------------------------------- timeline
+const PLAY='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M7 4l13 8-13 8z"/></svg>',PAUSE='<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+function setFrame(i){S.frame=Math.max(0,Math.min(data.periods.length-1,i));draw()}
+function play(){if(!data||data.periods.length<2)return;if(S.frame>=data.periods.length-1)S.frame=-1;playing=true;$('play').innerHTML=PAUSE;$('play').setAttribute('aria-label','Pause');tick()}
+function tick(){if(!playing)return;setFrame(S.frame+1);if(S.frame>=data.periods.length-1){stop();return}timer=setTimeout(tick,+$('speed').value)}
+function stop(){playing=false;clearTimeout(timer);$('play').innerHTML=PLAY;$('play').setAttribute('aria-label','Play')}
+$('play').onclick=()=>playing?stop():play();
+$('slider').oninput=e=>{stop();setFrame(+e.target.value)};
+function ticks(){const p=data.periods,n=p.length,show=n<=8?p.map((_,i)=>i):[0,Math.round(n/4),Math.round(n/2),Math.round(3*n/4),n-1];$('ticks').innerHTML=[...new Set(show)].map(i=>`<span>${esc(p[i].label)}</span>`).join('')}
+
+// ---------------------------------------------------------------- loading
+function rangeQuery(extra={}){
+  const q=new URLSearchParams({grain:S.grain,...extra});
+  if(S.from)q.set('from',S.from+'-01');
+  if(S.to){const [y,m]=S.to.split('-').map(Number);q.set('to',new Date(Date.UTC(y,m,0)).toISOString().slice(0,10))}
+  for(const [k,v] of [...q])if(v==='')q.delete(k);
+  return q
+}
+async function loadMoves(){
+  if(S.move==='off'){moves=null;return}
+  const seq=++moveSeq;
+  try{const r=await fetch(`${API}/geo/movements?${rangeQuery({indicator:S.indicator})}`,{cache:'no-store'});if(!r.ok)throw Error((await r.json().catch(()=>({}))).detail||'Movements could not be loaded.');
+    const d=await r.json();if(seq===moveSeq)moves=d}catch(e){if(seq===moveSeq){moves=null;$('understood').className='understood warn';$('understood').textContent=e.message}}
+}
+async function load({autoplay=false}={}){
+  stop();const seq=++reqSeq;$('loading').classList.add('on');
+  const q=rangeQuery({indicator:S.indicator});if(S.type)q.set('type',S.type);
+  try{
+    const [r]=await Promise.all([fetch(`${API}/geo/series?${q}`,{cache:'no-store'}),loadMoves()]);
+    if(!r.ok)throw Error((await r.json().catch(()=>({}))).detail||'The map data could not be loaded.');
+    const d=await r.json();if(seq!==reqSeq)return;
+    data=d;S.frame=autoplay?0:d.periods.length-1;
+    if(S.place&&!(moves&&moves.origins.some(o=>o.id===S.place)))S.place=null;
+    $('slider').max=d.periods.length-1;ticks();about();draw();
+    if(autoplay)setTimeout(play,600);
+  }catch(e){if(seq===reqSeq)$('summary').innerHTML=`<div class="status error">${esc(e.message)}</div>`}
+  finally{if(seq===reqSeq)$('loading').classList.remove('on')}
+}
+function syncControls(){
+  $('ind').value=S.indicator;$('from').value=S.from;$('to').value=S.to;
+  for(const [id,key] of [['grain','grain'],['mode','mode'],['sex','sex'],['move','move']])document.querySelectorAll(`#${id} button`).forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S[key]));
+  document.querySelectorAll('#mode button').forEach(b=>b.disabled=S.sex==='compare');
+}
+$('ind').onchange=()=>{S.indicator=$('ind').value;$('understood').textContent='';load()};
+$('from').onchange=()=>{S.from=$('from').value;load()};
+$('to').onchange=()=>{S.to=$('to').value;load()};
+document.querySelectorAll('#grain button').forEach(b=>b.onclick=()=>{S.grain=b.dataset.v;syncControls();load()});
+document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{S.mode=b.dataset.v;syncControls();draw()});
+document.querySelectorAll('#sex button').forEach(b=>b.onclick=()=>{S.sex=b.dataset.v;syncControls();draw()});
+document.querySelectorAll('#move button').forEach(b=>b.onclick=async()=>{S.move=b.dataset.v;S.place=null;S.transfer=null;syncControls();
+  if(S.move==='off'){moves=null;draw();return}$('loading').classList.add('on');await loadMoves();$('loading').classList.remove('on');draw();if(S.move==='home'&&!S.province)fitMoves()});
+
+// ---------------------------------------------------------------- search
+let searchItems=[],searchSel=0;
+function searchIndex(){
+  const items=[...PROV.map(p=>({kind:'Province',name:p.name,go:()=>go({province:p.key,district:null,facility:null,place:null,transfer:null})})),
+    ...DIST.map(d=>({kind:'District',sub:PROV.find(p=>p.key===d.prov)?.name,name:d.name,go:()=>go({province:d.prov,district:d.key,facility:null,place:null,transfer:null})})),
+    ...(data?placed().filter(f=>f._dist).map(f=>({kind:f.typeLabel||'Facility',sub:f.district,name:f.name,data:!!f.values,go:()=>go({province:DIST.find(d=>d.key===f._dist).prov,district:f._dist,facility:f.id,place:null,transfer:null})})):[]),
+    ...PLACES.map(p=>({kind:p.kind==='suburb'?'Suburb':'Town',sub:'where patients live',name:p.name,go:async()=>{if(S.move!=='home'){S.move='home';syncControls();await loadMoves()}
+      if(moves&&moves.origins.some(o=>o.id===p.id))go({place:p.id,transfer:null});else{$('understood').className='understood warn';$('understood').textContent=`No patients from ${p.name} are counted for ${LABEL[S.indicator]} in this period.`;draw()}}}))];
+  return items
+}
+function runSearch(){
+  const t=norm($('search').value),ul=$('searchList');
+  if(!t){ul.classList.remove('on');return}
+  const all=searchIndex(),score=x=>{const n=norm(x.name);return n===t?0:n.startsWith(t)?1:n.includes(' '+t)?2:n.includes(t)?3:9};
+  searchItems=all.map(x=>({...x,s:score(x)})).filter(x=>x.s<9).sort((a,b)=>a.s-b.s||(b.data?1:0)-(a.data?1:0)||a.name.localeCompare(b.name)).slice(0,12);searchSel=0;
+  ul.innerHTML=searchItems.map((x,k)=>`<li role="option" data-k="${k}" aria-selected="${k===0}"><span>${esc(x.name)}${x.data?' <small style="color:var(--green)">● data</small>':''}</span><small>${esc(x.kind)}${x.sub?' · '+esc(x.sub):''}</small></li>`).join('')||'<li><small>No matching place</small></li>';
+  ul.classList.add('on');
+  ul.querySelectorAll('[data-k]').forEach(li=>li.onmousedown=e=>{e.preventDefault();choose(+li.dataset.k)});
+}
+function choose(k){const x=searchItems[k];if(!x)return;$('search').value='';$('search').blur();$('searchList').classList.remove('on');x.go()}
+$('search').oninput=runSearch;
+$('search').onkeydown=e=>{const ul=$('searchList');if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();searchSel=(searchSel+(e.key==='ArrowDown'?1:-1)+searchItems.length)%Math.max(1,searchItems.length);ul.querySelectorAll('[data-k]').forEach(li=>li.setAttribute('aria-selected',+li.dataset.k===searchSel))}
+  else if(e.key==='Enter'){e.preventDefault();choose(searchSel)}else if(e.key==='Escape'){ul.classList.remove('on')}};
+$('search').onblur=()=>setTimeout(()=>$('searchList').classList.remove('on'),150);
+
+// ---------------------------------------------------------------- plain-language questions
+const SYNONYMS=[
+  ['maternalDeaths',/maternal (death|mortality)|mothers? (who )?died|deaths? of mothers/],
+  ['stillBirths',/still ?births?|stillborn/],['liveBirths',/live births?/],
+  ['deliveries',/deliver(y|ies)|births?|maternity/],
+  ['deaths',/\bdeaths?\b|mortality|died/],
+  ['hivPositive',/hiv (positive|cases?|infections?)|positive hiv|new hiv|hiv\+|\bhiv\b(?! test)/],
+  ['htsTests',/hiv test|hts|tested for hiv|hiv testing/],
+  ['artNew',/\bart\b|antiretroviral|initiat/],
+  ['ancBookings',/\banc\b|antenatal|bookings?|pregnan/],
+  ['malariaPositive',/malaria (positive|cases?)|positive malaria/],
+  ['malariaTests',/malaria/],
+  ['tbRegistered',/\btb\b|tuberculosis/],
+  ['opd',/\bopd\b|outpatient/],
+  ['attendances',/attendances?|visits?|patients? seen|footfall/],
+];
+const MONTHS=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function monthOf(txt,end){
+  const m=txt.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{4})/);if(m)return`${m[2]}-${String(MONTHS.indexOf(m[1])+1).padStart(2,'0')}`;
+  const y=txt.match(/\b(20\d\d)\b/);if(y)return end?`${y[1]}-12`:`${y[1]}-01`;return null
+}
+function parseQuestion(text){
+  const t=' '+text.toLowerCase().replace(/[’']/g,"'")+' ',out={};
+  const hit=SYNONYMS.find(([,re])=>re.test(t));if(hit)out.indicator=hit[0];
+  const last=dataEnd.slice(0,7),now=/\b(now|today|date|present|current|latest)\b/;let m;
+  if((m=t.match(/(?:from|since|between)\s+([a-z]*\.?\s*\d{4})\s*(?:to|until|till|and|-|–)\s*([a-z]*\.?\s*\d{4}|now|today|date|present)/))){out.from=monthOf(m[1]);out.to=now.test(m[2])?last:monthOf(m[2],true)}
+  else if((m=t.match(/\b(\d{4})\s*(?:to|-|–|until)\s*(\d{4}|now|today|date)/))){out.from=`${m[1]}-01`;out.to=now.test(m[2])?last:`${m[2]}-12`}
+  else if((m=t.match(/(?:from|since)\s+([a-z]*\.?\s*\d{4})/))){out.from=monthOf(m[1]);out.to=last}
+  else if((m=t.match(/last\s+(\d+|two|three|four|five|six|twelve)\s+(year|month)s?/))){const n={two:2,three:3,four:4,five:5,six:6,twelve:12}[m[1]]||+m[1],months=m[2]==='year'?n*12:n;
+    const d=new Date(dataEnd);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-months+1);out.from=d.toISOString().slice(0,7);out.to=last}
+  else if(/last year|past year/.test(t)){const d=new Date(dataEnd);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-11);out.from=d.toISOString().slice(0,7);out.to=last}
+  else if((m=t.match(/\b(?:in|during|for)\s+(\d{4})\b/))){out.from=`${m[1]}-01`;out.to=`${m[1]}-12`}
+  else if(/this year/.test(t)){out.from=dataEnd.slice(0,4)+'-01';out.to=last}
+  if(/monthly|by month|per month|each month|month by month/.test(t))out.grain='month';else if(/quarter/.test(t))out.grain='quarter';else if(/yearly|annual|by year|per year|each year|year by year/.test(t))out.grain='year';
+  if(/\bchange|increase|decrease|growth|rise|fall|trend/.test(t))out.mode='change';
+  if(/(by|according to|per|across|split by|and) (sex|gender)|gender|\bsex\b|male and female|female and male|men and women|women and men/.test(t))out.sex='compare';
+  else if(/\b(women|female|females|girls|mothers)\b/.test(t)&&!/maternal|anc|deliver|birth/.test(t))out.sex='female';
+  else if(/\b(men|male|males|boys)\b/.test(t))out.sex='male';
+  if(/transfer|referr/.test(t))out.move='transfers';
+  else if(/where .*(come from|live|stay|from)|movement|move|travel|catchment|home|origin|flow/.test(t))out.move='home';
+  if(/hospital/.test(t))out.type='HOSPITAL';else if(/clinic/.test(t))out.type='';
+  const d=DIST.slice().sort((a,b)=>b.name.length-a.name.length).find(d=>t.includes(' '+d.key+' '));
+  const p=PROV.slice().sort((a,b)=>b.name.length-a.name.length).find(p=>t.includes(' '+p.key+' '));
+  const pl=PLACES.slice().sort((a,b)=>b.name.length-a.name.length).find(x=>x.kind==='suburb'&&t.includes(' '+norm(x.name)+' '));
+  if(pl){out.place=pl.id;out.move='home'}
+  else if(d&&!(p&&p.key===d.key&&!/district/.test(t))){out.province=d.prov;out.district=d.key}else if(p){out.province=p.key;out.district=null}
+  else if(/zimbabwe|national|country|whole|where (do )?we have|where (is|are)|which (province|district|area|facility)|\bmost\b|highest|hotspot/.test(t)){out.province=null;out.district=null}
+  return out
+}
+function autoGrain(from,to){const a=from.split('-').map(Number),b=to.split('-').map(Number),n=(b[0]-a[0])*12+b[1]-a[1]+1;return n<=18?'month':n<=60?'quarter':'year'}
+async function ask(text){
+  const p=parseQuestion(text);
+  if(!p.indicator&&!p.from&&!p.province&&!p.place&&!p.move&&!p.sex){$('understood').className='understood warn';$('understood').innerHTML=`I couldn't tell what to show. Try naming an indicator and a period, e.g. <b>HIV positive cases by gender from 2022 to now</b>. Indicators: ${INDICATORS.map(x=>esc(x.label.toLowerCase())).join(', ')}.`;return}
+  if(p.indicator)S.indicator=p.indicator;
+  if(p.from){S.from=p.from;S.to=p.to||dataEnd.slice(0,7)}
+  if(!p.grain&&p.from)p.grain=autoGrain(S.from,S.to);
+  if(p.grain)S.grain=p.grain;S.mode=p.mode||'value';S.sex=p.sex||'all';S.move=p.move||'off';
+  const typeChanged='type' in p&&p.type!==S.type;if('type' in p)S.type=p.type;
+  if('province' in p){history.push(snapshot());S.province=p.province;S.district=p.district||null;S.facility=null}
+  S.place=null;S.transfer=null;
+  syncControls();
+  const place=S.district?DIST.find(d=>d.key===S.district).name+' district':S.province?PROV.find(x=>x.key===S.province).name+' province':'Zimbabwe';
+  const fmtM=m=>new Date(m+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+  $('understood').className='understood';
+  $('understood').innerHTML=`Showing <b>${esc(LABEL[S.indicator])}</b>${S.sex==='compare'?' <b>by sex</b>':S.sex!=='all'?` for <b>${S.sex}s</b>`:''}${S.type==='HOSPITAL'?' at <b>hospitals</b>':''} in <b>${esc(place)}</b>, <b>${esc(fmtM(S.from))} – ${esc(fmtM(S.to))}</b>, by ${S.grain}${S.mode==='change'?', coloured by change':''}${S.move==='home'?', with lines from where patients live':S.move==='transfers'?', with transfers between facilities':''}. Playing the timeline…`;
+  if(EMBEDDED&&'province' in p){const g=S.province&&geography.provinces.find(x=>norm(x.name)===S.province);parent.postMessage({type:'impilo-set-filters',patch:{province:g?g.id:'',district:'',facility:'',...(typeChanged?{type:S.type}:{})}},'*')}
+  await load({autoplay:true});
+  if(p.place&&moves&&moves.origins.some(o=>o.id===p.place))go({place:p.place});
+  else if(S.move==='home'&&!S.province)fitMoves();else animateTo(targetBox());
+}
+$('askForm').onsubmit=e=>{e.preventDefault();const t=$('q').value.trim();if(t)ask(t)};
+const EXAMPLES=['HIV positive cases by gender from 2022 to now','Where do HIV positive patients live?','Show me maternal deaths from 2022 to now','Malaria positive cases by year','ANC registrations in 2024 by month','ART transfers since 2023','OPD visits for women over the last 12 months'];
+$('chips').innerHTML=EXAMPLES.map(x=>`<button class="chip" type="button">${esc(x)}</button>`).join('');
+$('chips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{$('q').value=c.textContent;ask(c.textContent)});
+
+// ---------------------------------------------------------------- portal filters
+// Province and facility type follow the portal-wide filters; the period is set here, on the timeline.
+function applyGlobal(){
+  const f=globalFilters.filters||{},prov=f.province&&geography.provinces.find(x=>x.id===f.province),pk=prov?norm(prov.name):null;
+  const typeChanged=(f.type||'')!==S.type;S.type=f.type||'';let patch={};
+  if(pk!==S.province)patch={province:pk,district:null,facility:null,place:null,transfer:null};
+  if(f.facility&&data){const fac=placed().find(x=>x.id===f.facility);if(fac&&fac._dist)patch={province:DIST.find(d=>d.key===fac._dist).prov,district:fac._dist,facility:fac.id}}
+  if(typeChanged&&data)load();
+  if(Object.keys(patch).length&&data)go(patch,{sync:false});else Object.assign(S,patch);
+}
+window.addEventListener('message',e=>{if(e.source!==window.parent||!e.data||e.data.type!=='impilo-filters')return;globalFilters=e.data;if(geography)applyGlobal()});
+
+async function init(){
+  $('play').innerHTML=PLAY;
+  try{
+    const [a,b,c]=await Promise.all([fetch(`${API}/geo/indicators`,{cache:'no-store'}),fetch(`${API}/geography`,{cache:'no-store'}),fetch(`${API}/geo/places`,{cache:'no-store'})]);
+    if(!a.ok||!b.ok)throw Error('The map service is not available. Run update.cmd, then reload.');
+    const ind=await a.json();geography=await b.json();PLACES=c.ok?(await c.json()).places:[];
+    INDICATORS=ind.indicators;dataStart=ind.dataStart;dataEnd=ind.dataEnd;INDICATORS.forEach(x=>LABEL[x.key]=x.label);
+    const groups=[...new Set(INDICATORS.map(x=>x.group))];
+    $('ind').innerHTML=groups.map(g=>`<optgroup label="${esc(g)}">${INDICATORS.filter(x=>x.group===g).map(x=>`<option value="${x.key}">${esc(x.label)}</option>`).join('')}</optgroup>`).join('');
+    const d=new Date(dataEnd);S.to=dataEnd.slice(0,7);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-23);S.from=d.toISOString().slice(0,7);
+    $('from').min=$('to').min=(dataStart||'2015-01').slice(0,7);$('from').max=$('to').max=S.to;
+    syncControls();setVB(targetBox());
+    if(EMBEDDED){parent.postMessage({type:'impilo-filters-request'},'*');if(globalFilters)applyGlobal()}
+    await load();
+    if(EMBEDDED&&globalFilters)applyGlobal();
+    animateTo(targetBox(),1);
+  }catch(e){$('summary').innerHTML=`<div class="status error">${esc(e.message)}</div>`}
+}
+addEventListener('resize',()=>{if(data)setVB(targetBox())});
+if(EMBEDDED){const ph=()=>parent.postMessage({type:'geo-height',height:document.documentElement.scrollHeight},'*');new ResizeObserver(ph).observe(document.body);ph()}
+init();
+</script>
+</body>
+</html>

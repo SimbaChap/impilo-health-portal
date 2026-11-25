@@ -27,7 +27,11 @@
     get user() { return session && session.user; },
     get token() { return session && session.token; },
     save: function (s) { session = s; localStorage.setItem(KEY, JSON.stringify(s)); },
-    signOut: function () { toSignin('signedout'); }
+    signOut: function () { toSignin('signedout'); },
+    // What this account may do (the API checks the same rules on every request).
+    can: function (module) { var u = session && session.user; return !!u && (u.role === 'admin' || (u.modules || []).indexOf(module) >= 0); },
+    mayDownload: function (kind) { var u = session && session.user; return !!u && (u.role === 'admin' || !!(u.downloads || {})[kind]); },
+    get patientData() { var u = session && session.user; return !!u && (u.role === 'admin' || !!u.patientData); }
   };
   if (isSignin) return;
   if (!valid(session)) { toSignin(session ? 'expired' : ''); return; }
@@ -37,7 +41,8 @@
   // Every request to the API carries the session; a 401 sends you back to sign in.
   var realFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
-    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    // fetch() accepts text, a URL object or a Request; the registers pass URL objects.
+    var url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input && input.url) || '';
     if (url.indexOf(API + '/api/') !== 0) return realFetch(input, init);
     init = Object.assign({}, init || {});
     var headers = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});
@@ -56,7 +61,48 @@
     if (!valid(s) || !session || s.user.username !== session.user.username) location.reload(); else session = s;
   });
 
+  // Download buttons someone isn't allowed to use are hidden (the API refuses them anyway).
+  function guardDownloads() {
+    if (!session || !session.user) return;
+    var hide = [];
+    if (!window.ImpiloAuth.mayDownload('registers') && /-register\.html$/.test(location.pathname)) hide.push('.download-block');
+    if (!hide.length) return;
+    var st = document.createElement('style'); st.textContent = hide.join(',') + '{display:none!important}'; document.head.appendChild(st);
+  }
+  guardDownloads();
+
   if (window.top !== window) return;  // the user menu lives in the portal shell only
+
+  // Pick up permission changes made by an administrator since sign-in.
+  fetch(API + '/api/auth/me', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (u) {
+    if (!u || !session) return;
+    var changed = JSON.stringify(u) !== JSON.stringify(session.user);
+    session.user = u; localStorage.setItem(KEY, JSON.stringify(session));
+    if (changed) guardNav();
+  }).catch(function () { });
+
+  // ------------------------------------------------------------------ sections this account may open
+  var NAV = [['Overview', 'overview'], ['Data intelligence', 'intel'], ['Geospatial intelligence', 'geo'], ['Registers', 'registers'], ['Reports', 'reports'],
+    ['Facilities reporting', 'facilities'], ['Ask the data', 'ask'], ['Data workspace', 'workspace'], ['Configuration', 'config'], ['Users & access', 'users']];
+  function moduleOf(btn) { var t = btn.textContent.trim(); for (var i = 0; i < NAV.length; i++) if (t.indexOf(NAV[i][0]) === 0) return NAV[i][1]; return null; }
+  function guardNav() {
+    var buttons = document.querySelectorAll('nav[aria-label="Portal sections"] button');
+    if (!buttons.length) return;
+    var firstAllowed = null, activeBlocked = false;
+    buttons.forEach(function (b) {
+      var m = moduleOf(b), ok = !m || window.ImpiloAuth.can(m);
+      if (b.style.display !== (ok ? '' : 'none')) b.style.display = ok ? '' : 'none';
+      if (ok && !firstAllowed) firstAllowed = b;
+      if (!ok && b.getAttribute('aria-current') === 'page') activeBlocked = true;
+    });
+    var ask = Array.prototype.find.call(document.querySelectorAll('button'), function (b) { return b.textContent.trim() === 'Ask the data' && !b.closest('nav'); });
+    if (ask) ask.style.display = window.ImpiloAuth.can('ask') ? '' : 'none';
+    if (activeBlocked && firstAllowed) firstAllowed.click();
+  }
+  function openSection(label) {
+    var b = Array.prototype.find.call(document.querySelectorAll('nav[aria-label="Portal sections"] button'), function (x) { return x.textContent.trim().indexOf(label) === 0; });
+    if (b) { b.click(); window.scrollTo({ top: 0 }); }
+  }
 
   // ------------------------------------------------------------------ user menu (portal header)
   var css = document.createElement('style');
@@ -100,13 +146,13 @@
     var old = host.querySelector('.um-pop'); if (old) { old.remove(); btn.setAttribute('aria-expanded', 'false'); return; }
     var u = session.user, pop = document.createElement('div');
     pop.className = 'um-pop'; pop.setAttribute('role', 'menu');
-    pop.innerHTML = '<div class="who"><b>' + esc(u.name) + '</b>' + esc(u.username) + ' · ' + (u.role === 'admin' ? 'Administrator' : 'Viewer') + '</div>' +
-      '<button role="menuitem" data-a="pw">Change password</button>' + (u.role === 'admin' ? '<button role="menuitem" data-a="users">Manage users</button>' : '') +
+    pop.innerHTML = '<div class="who"><b>' + esc(u.name) + '</b>' + esc(u.username) + ' · ' + (u.role === 'admin' ? 'Administrator' : 'Standard user') + '</div>' +
+      '<button role="menuitem" data-a="pw">Change password</button>' + (u.role === 'admin' ? '<button role="menuitem" data-a="users">Users &amp; access</button>' : '') +
       '<button role="menuitem" class="out" data-a="out">Sign out</button>';
     host.appendChild(pop); btn.setAttribute('aria-expanded', 'true');
     pop.addEventListener('click', function (e) {
       var a = e.target.getAttribute('data-a'); if (!a) return; pop.remove();
-      if (a === 'out') window.ImpiloAuth.signOut(); else if (a === 'pw') passwordDialog(); else usersDialog();
+      if (a === 'out') window.ImpiloAuth.signOut(); else if (a === 'pw') passwordDialog(); else openSection('Users & access');
     });
   }
   document.addEventListener('click', function (e) { var p = document.querySelector('.um-pop'); if (p && !e.target.closest('#impilo-user-menu')) p.remove(); });
@@ -130,56 +176,9 @@
         .catch(function (e) { msg.className = 'um-msg bad'; msg.textContent = e.message; });
     };
   }
-  function usersDialog() {
-    var m = modal('<h2>Manage users</h2><div class="sub">Administrators can change settings and manage accounts. Viewers can use the portal and the AI chat.</div><div id="umList">Loading…</div>' +
-      '<h2 style="font-size:15px;margin-top:18px" id="umFormTitle">Add a user</h2><label>Username</label><input id="umUser" autocomplete="off"><label>Full name</label><input id="umName">' +
-      '<label>Role</label><select id="umRole"><option value="viewer">Viewer</option><option value="admin">Administrator</option></select>' +
-      '<label>Password <span style="font-weight:400;color:#637797" id="umPwHint">(at least 10 characters, mixed case and a number)</span></label><input type="password" id="umPw" autocomplete="new-password">' +
-      '<label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="umActive" checked style="width:auto"> Account active</label>' +
-      '<div class="um-msg" id="umMsg"></div><div class="um-row"><button class="um-b g" data-x>Close</button><button class="um-b" id="umSave">Save user</button></div>');
-    var msg = m.querySelector('#umMsg');
-    function load() {
-      api('/api/auth/users').then(function (r) {
-        m.querySelector('#umList').innerHTML = '<table class="um-table"><thead><tr><th>User</th><th>Role</th><th>Last sign-in</th><th></th></tr></thead><tbody>' +
-          r.users.map(function (u) {
-            return '<tr><td><b>' + esc(u.name) + '</b><br><span style="color:#637797">' + esc(u.username) + '</span></td><td><span class="um-pill' + (u.active ? '' : ' off') + '">' + (u.active ? (u.role === 'admin' ? 'Administrator' : 'Viewer') : 'Disabled') + '</span></td>' +
-              '<td>' + (u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Never') + '</td>' +
-              '<td style="text-align:right;white-space:nowrap"><button class="um-b g" style="padding:4px 9px" data-edit="' + esc(u.username) + '">Edit</button>' +
-              (u.username !== session.user.username ? ' <button class="um-b r" style="padding:4px 9px" data-del="' + esc(u.username) + '">Delete</button>' : '') + '</td></tr>';
-          }).join('') + '</tbody></table>';
-        m.querySelectorAll('[data-edit]').forEach(function (b) {
-          b.onclick = function () {
-            var u = r.users.filter(function (x) { return x.username === b.getAttribute('data-edit'); })[0];
-            m.querySelector('#umFormTitle').textContent = 'Edit ' + u.name; m.querySelector('#umUser').value = u.username; m.querySelector('#umUser').disabled = true;
-            m.querySelector('#umName').value = u.name; m.querySelector('#umRole').value = u.role; m.querySelector('#umActive').checked = u.active;
-            m.querySelector('#umPw').value = ''; m.querySelector('#umPwHint').textContent = '(leave empty to keep the current password)';
-          };
-        });
-        m.querySelectorAll('[data-del]').forEach(function (b) {
-          b.onclick = function () {
-            if (b.textContent !== 'Confirm') { b.textContent = 'Confirm'; return; }
-            api('/api/auth/users/' + encodeURIComponent(b.getAttribute('data-del')), { method: 'DELETE' }).then(load).catch(function (e) { msg.className = 'um-msg bad'; msg.textContent = e.message; });
-          };
-        });
-      }).catch(function (e) { m.querySelector('#umList').textContent = e.message; });
-    }
-    load();
-    m.querySelector('[data-x]').onclick = function () { m.remove(); };
-    m.querySelector('#umSave').onclick = function () {
-      var body = { username: m.querySelector('#umUser').value.trim(), name: m.querySelector('#umName').value.trim(), role: m.querySelector('#umRole').value,
-        active: m.querySelector('#umActive').checked, password: m.querySelector('#umPw').value || null };
-      api('/api/auth/users', { method: 'PUT', body: JSON.stringify(body) }).then(function (u) {
-        msg.className = 'um-msg ok'; msg.textContent = 'Saved ' + u.name + '.';
-        ['#umUser', '#umName', '#umPw'].forEach(function (id) { m.querySelector(id).value = ''; });
-        m.querySelector('#umUser').disabled = false; m.querySelector('#umFormTitle').textContent = 'Add a user';
-        m.querySelector('#umPwHint').textContent = '(at least 10 characters, mixed case and a number)'; load();
-      }).catch(function (e) { msg.className = 'um-msg bad'; msg.textContent = e.message; });
-    };
-  }
-
   function start() {
-    mountMenu();
-    new MutationObserver(mountMenu).observe(document.body, { childList: true, subtree: true });
+    mountMenu(); guardNav();
+    new MutationObserver(function () { mountMenu(); guardNav(); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current'] });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

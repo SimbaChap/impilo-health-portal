@@ -80,7 +80,8 @@ def _check(password, user):
 
 
 def _public(u):
-    return {k: u.get(k) for k in ('username', 'name', 'role', 'active', 'created', 'lastLogin')}
+    import access
+    return {k: u.get(k) for k in ('username', 'name', 'role', 'active', 'created', 'lastLogin', 'email', 'note')} | access.permissions(u)
 
 
 def _now():
@@ -151,9 +152,12 @@ async def auth_middleware(request: Request, call_next):
     if not user:
         return JSONResponse({'detail': 'Please sign in.'}, status_code=401, headers={'Cache-Control': 'no-store'})
     request.state.user = user
-    # AI configuration (models, settings, training) is for administrators; everyone can chat.
-    if path.startswith('/api/ai/') and request.method != 'GET' and path != '/api/ai/chat' and user['role'] != 'admin':
-        return JSONResponse({'detail': 'Only administrators can change the AI configuration.'}, status_code=403)
+    # Sections, area, downloads and patient-level data (see access.py). AI configuration and user
+    # management stay with administrators.
+    import access
+    refused = access.check(request, user)
+    if refused is not None:
+        return refused
     return await call_next(request)
 
 
@@ -186,12 +190,30 @@ class PasswordRequest(BaseModel):
     new: str = Field(max_length=200)
 
 
+class AccessRequest(BaseModel):
+    level: str = Field('national', pattern='^(national|province|district|facility)$')
+    areas: list[str] = Field([], max_length=500)
+
+
+class DownloadsRequest(BaseModel):
+    reports: bool = False
+    registers: bool = False
+    raw: bool = False
+
+
 class UserRequest(BaseModel):
     username: str = Field(min_length=3, max_length=40, pattern=r'^[A-Za-z0-9._@-]+$')
     name: str = Field(min_length=1, max_length=80)
     role: str = Field('viewer', pattern='^(admin|viewer)$')
     password: str | None = Field(None, max_length=200)
     active: bool = True
+    # Leave these out to keep what the account already has.
+    access: AccessRequest | None = None
+    modules: list[str] | None = None
+    patientData: bool | None = None
+    downloads: DownloadsRequest | None = None
+    email: str | None = Field(None, max_length=120)
+    note: str | None = Field(None, max_length=300)
 
 
 @router.get('/status')
@@ -277,7 +299,24 @@ def save_user(req: UserRequest, request: Request):
             users.append(u)
         if name == admin['username'] and (req.role != 'admin' or not req.active):
             raise HTTPException(400, "You can't remove your own administrator access.")
+        import access
         u.update(name=req.name.strip(), role=req.role, active=req.active)
+        if req.access is not None:
+            try:
+                access.validate(req.access.level, req.access.areas, req.modules or [], None)
+            except ValueError as e:
+                raise HTTPException(400, str(e))
+            u['access'] = {'level': req.access.level, 'areas': req.access.areas if req.access.level != 'national' else []}
+        if req.modules is not None:
+            try:
+                access.validate('national', [], req.modules, None)
+            except ValueError as e:
+                raise HTTPException(400, str(e))
+            u['modules'] = [m for m in req.modules if m not in access.ADMIN_ONLY]
+        if req.patientData is not None: u['patientData'] = req.patientData
+        if req.downloads is not None: u['downloads'] = req.downloads.model_dump()
+        if req.email is not None: u['email'] = req.email.strip()
+        if req.note is not None: u['note'] = req.note.strip()
         if req.password:
             _valid_password(req.password)
             u['salt'], u['hash'] = _hash(req.password)

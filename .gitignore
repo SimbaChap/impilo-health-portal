@@ -10,6 +10,7 @@ api/.env
 config/
 api/auth-data/
 api/ai-data/
+api/report-data/
 
 # Generated / machine-specific
 api/.venv/

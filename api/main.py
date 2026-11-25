@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -27,6 +28,7 @@ app.add_middleware(
     allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],
     allow_methods=["GET", "POST", "PUT", "DELETE"],  # POST/PUT/DELETE for the AI assistant
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],  # so downloads keep their file names
 )
 
 
@@ -627,6 +629,18 @@ def corrected_data(kind,from_date,to_date,facility=None):
         if c is not None:c.close()
 
 
+def _monthly_sex(rows):
+    """Records per month, split by sex, for the register charts."""
+    out={}
+    for r in rows:
+        d=r.get('eventDate')
+        if not d:continue
+        m=out.setdefault(str(d)[:7],{'month':str(d)[:7],'total':0,'female':0,'male':0,'other':0})
+        sx=(r.get('sex') or r.get('maternalSex') or '').upper()
+        m['total']+=1;m['female' if sx=='FEMALE' else 'male' if sx=='MALE' else 'other']+=1
+    return [out[k] for k in sorted(out)]
+
+
 def corrected_summary(kind,from_date,to_date,facility):
     rows,site=corrected_data(kind,from_date,to_date,facility)
     daily=Counter(str(r['eventDate']) for r in rows if r['eventDate']);sex=Counter((r['sex'] or 'Unknown').upper() for r in rows)
@@ -640,7 +654,7 @@ def corrected_summary(kind,from_date,to_date,facility):
       'resultRecorded':sum((r.get('investigationResult') or '').upper() not in ('','MISSING','UNKNOWN','NOT DONE','NOT RECORDED') for r in rows),
       'medicationsRecorded':sum(bool(r.get('medications')) for r in rows)}
     return {'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),
-      'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in sex.most_common()],
+      'monthlyBySex':_monthly_sex(rows),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in sex.most_common()],
       'ageBands':[{'label':k,'count':bands[k]} for k in ['0-4','5-14','15-24','25-44','45-64','65+','Unknown']],
       'results':[{'label':k,'count':v} for k,v in result_counts.most_common()], 'recorded':recorded,'facilities':[site]}
 
@@ -807,7 +821,7 @@ def anc_summary(from_date: date | None=Query(None,alias='from'),to_date: date | 
         age=r['age'];ages['Unknown' if age is None else 'Under 20' if age<20 else '20-24' if age<25 else '25-29' if age<30 else '30-34' if age<35 else '35+']+=1
     bookings=Counter(r['firstBooking'] or 'Unknown' for r in rows)
     return {'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),
-      'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in Counter(r['sex'] or 'Unknown' for r in rows).items()],
+      'monthlyBySex':_monthly_sex(rows),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in Counter(r['sex'] or 'Unknown' for r in rows).items()],
       'ageBands':[{'label':k,'count':ages[k]} for k in ['Under 20','20-24','25-29','30-34','35+','Unknown']],
       'bookingTypes':[{'label':k,'count':v} for k,v in bookings.items()],
       'recorded':{'firstBookings':sum(r['firstBooking']=='Yes' for r in rows),'linkedVisits':sum(len(r['visits']) for r in rows)},'facilities':[site]}
@@ -1056,7 +1070,7 @@ def tb_summary(from_date: date | None=Query(None,alias='from'),to_date: date | N
     rows,site=tb_data(from_date,to_date,facility);daily=Counter(str(r['eventDate']) for r in rows if r['eventDate']);ages=Counter();sex=Counter(r['sex'] or 'Unknown' for r in rows);outcomes=Counter(r['treatmentOutcome'] or 'Unknown' for r in rows)
     for r in rows:
         age=r['age'];ages['Unknown' if age is None else 'Under 5' if age<5 else '5-14' if age<15 else '15-24' if age<25 else '25-49' if age<50 else '50+']+=1
-    return {'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in sorted(sex.items())],'ageBands':[{'label':k,'count':ages[k]} for k in ['Under 5','5-14','15-24','25-49','50+','Unknown']],'outcomes':[{'label':k,'count':v} for k,v in sorted(outcomes.items())],'recorded':{'treatmentStarted':sum(r['treatmentInitiated']=='Yes' for r in rows),'outcomeRecorded':sum(bool(r['treatmentOutcome']) for r in rows)},'facilities':[site]}
+    return {'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),'monthlyBySex':_monthly_sex(rows),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'sex':[{'label':k,'count':v} for k,v in sorted(sex.items())],'ageBands':[{'label':k,'count':ages[k]} for k in ['Under 5','5-14','15-24','25-49','50+','Unknown']],'outcomes':[{'label':k,'count':v} for k,v in sorted(outcomes.items())],'recorded':{'treatmentStarted':sum(r['treatmentInitiated']=='Yes' for r in rows),'outcomeRecorded':sum(bool(r['treatmentOutcome']) for r in rows)},'facilities':[site]}
 
 @app.get('/api/tb/export')
 def tb_export(format: Literal['csv','xlsx','pdf'],from_date: date | None=Query(None,alias='from'),to_date: date | None=Query(None,alias='to'),facility: str | None=None):
@@ -1369,7 +1383,7 @@ def _da_summary(rows,site,kind):
     daily=Counter(str(r['eventDate']) for r in rows if r['eventDate']);ages=Counter()
     for r in rows:
         age=r['age'];ages['Unknown' if age is None else 'Under 5' if age<5 else '5-14' if age<15 else '15-24' if age<25 else '25-49' if age<50 else '50+']+=1
-    result={'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'ageBands':[{'label':k,'count':ages[k]} for k in ['Under 5','5-14','15-24','25-49','50+','Unknown']],'facilities':[site]}
+    result={'total':len(rows),'uniquePeople':len({r['personId'] for r in rows if r['personId']}),'monthlyBySex':_monthly_sex(rows),'daily':[{'date':k,'count':daily[k]} for k in sorted(daily)],'ageBands':[{'label':k,'count':ages[k]} for k in ['Under 5','5-14','15-24','25-49','50+','Unknown']],'facilities':[site]}
     if kind=='delivery':
         result.update(deliveries=len({r['deliveryId'] for r in rows}),outcomes=[{'label':k,'count':v} for k,v in sorted(Counter(r['birthOutcome'] or 'Unknown' for r in rows).items())],sex=[{'label':k,'count':v} for k,v in sorted(Counter(r['infantSex'] or 'Unknown' for r in rows).items())],recorded={'liveBirths':sum(r['birthKind']=='live' for r in rows),'stillBirths':sum(r['birthKind']=='still' for r in rows)})
     else:result.update(sex=[{'label':k,'count':v} for k,v in sorted(Counter(r['sex'] or 'Unknown' for r in rows).items())],categories=[{'label':k,'count':v} for k,v in sorted(Counter(r['artInitiationCategory'] or 'Unknown' for r in rows).items())],recorded={'linkedVisits':sum(len(r['visits']) for r in rows),'cohortWithStart':sum(bool(r['recordedStartDate']) for r in rows)})
@@ -1646,3 +1660,19 @@ def national_dashboard(from_date: date | None=Query(None,alias='from'),to_date: 
 # ---------------------------------------------------------------- AI assistant (Ollama)
 from ai import router as ai_router  # noqa: E402
 app.include_router(ai_router)
+
+# ---------------------------------------------------------------- Geospatial intelligence (map time-lapse)
+from geo import router as geo_router  # noqa: E402
+app.include_router(geo_router)
+
+# ---------------------------------------------------------------- Custom reports
+from reports import router as reports_router  # noqa: E402
+app.include_router(reports_router)
+
+# ---------------------------------------------------------------- Data workspace
+from workspace import router as workspace_router  # noqa: E402
+app.include_router(workspace_router)
+
+# ---------------------------------------------------------------- Permissions: hide patient details at the source
+import access  # noqa: E402
+access.install(sys.modules[__name__])

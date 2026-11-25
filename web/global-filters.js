@@ -18,7 +18,7 @@
     ['RURAL_HOSPITAL', 'Rural hospitals'], ['DISTRICT_HOSPITAL', 'District hospitals'], ['PROVINCIAL_HOSPITAL', 'Provincial hospitals'],
     ['CENTRAL_HOSPITAL', 'Central hospitals'], ['OTHER_HOSPITAL', 'Other hospitals']];
   var PERIODS = [['1', 'Last month of data'], ['3', 'Last 3 months of data'], ['6', 'Last 6 months of data'], ['12', 'Last 12 months of data'], ['custom', 'Custom dates']];
-  var APPLIES_TO = { overview: true, registers: true, ask: true };
+  var APPLIES_TO = { overview: true, registers: true, ask: true, geo: true };
 
   var filters = load();
   var geo = null, latestDate = null, lastUpdated = null, facilities = [], resolved = null, seq = 0, ready = false;
@@ -37,23 +37,26 @@
   css.textContent = '#impilo-global-filters{position:sticky;top:78px;z-index:30;margin-bottom:16px}' +
     '.igf{display:flex;flex-wrap:wrap;align-items:end;gap:10px;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid #e3e9f3;border-radius:16px;padding:12px 14px;box-shadow:0 10px 25px -18px rgba(11,31,58,.35);font-family:Inter,-apple-system,"Segoe UI",sans-serif}' +
     '.igf label{display:block;font-size:11px;font-weight:700;color:#465f88;margin-bottom:4px}' +
-    '.igf select,.igf input{font:inherit;font-size:13px;padding:7px 10px;border:1px solid #d7dfec;border-radius:9px;background:#f8fafc;color:#0b1f3a;max-width:220px}' +
+    '.igf select,.igf input{font:inherit;font-size:13.5px;height:38px;padding:0 12px;border:1px solid #e2e5ea;border-radius:10px;background:#fff;color:#111827;max-width:240px;box-shadow:0 1px 2px rgba(16,24,40,.06);transition:border-color .15s,box-shadow .15s}' +
+    '.igf select{-webkit-appearance:none;appearance:none;padding-right:34px;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236b7280%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M8 9l4-4 4 4M16 15l-4 4-4-4%27/%3E%3C/svg%3E\") no-repeat right 10px center;cursor:pointer}' +
+    '.igf select:hover,.igf .combo:hover{border-color:#cfd5dd}' +
+    '.igf select:focus,.igf input:focus{outline:0;border-color:#218a39;box-shadow:0 0 0 3px rgba(33,138,57,.14)}' +
     '.igf select:disabled{opacity:.55}' +
-    '.igf .btn{font:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:7px 12px;border:1px solid #218a39;background:#218a39;color:#fff;cursor:pointer}' +
+    '.igf .btn{font:inherit;font-size:13.5px;font-weight:600;border-radius:10px;height:38px;padding:0 14px;border:1px solid #218a39;background:#218a39;color:#fff;cursor:pointer}' +
     '.igf .btn.ghost{background:#fff;color:#218a39}.igf .btn.ghost:hover{background:#ecf7ee}' +
     '.igf .custom{display:none;gap:8px;align-items:end}.igf.is-custom .custom{display:flex}' +
     '.igf .scope{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:#637797;border-top:1px solid #edf1f7;padding-top:8px;margin-top:2px}' +
     '.igf .scope b{color:#0b1f3a;font-weight:700}' +
     '.igf .pill{font-size:11px;font-weight:600;border-radius:999px;padding:2px 8px}' +
-    '.igf .pill.on{background:#ecf7ee;color:#176c2b}.igf .pill.off{background:#fdf1d6;color:#8a5a00}' +
+    '.igf .upd{margin-left:auto;font-weight:600;color:#465f88;white-space:nowrap}.igf .upd+.note{margin-left:12px}.igf .pill.area{background:#eef2ff;color:#3730a3}.igf .pill.on{background:#ecf7ee;color:#176c2b}.igf .pill.off{background:#fdf1d6;color:#8a5a00}' +
     '.igf .note{margin-left:auto;font-style:italic}' +
     '.igf .tag{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#218a39}' +
     '.igf .field{position:relative}' +
-    '.igf .combo{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:13px;padding:7px 10px;border:1px solid #d7dfec;border-radius:9px;background:#f8fafc;color:#0b1f3a;cursor:pointer;text-align:left}' +
+    '.igf .combo{display:flex;align-items:center;justify-content:space-between;gap:10px;font:inherit;font-size:13.5px;height:38px;padding:0 10px 0 12px;border:1px solid #e2e5ea;border-radius:10px;background:#fff;color:#111827;cursor:pointer;text-align:left;box-shadow:0 1px 2px rgba(16,24,40,.06);transition:border-color .15s,box-shadow .15s}' +
     '.igf .combo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-    '.igf .combo:after{content:"";flex:none;width:7px;height:7px;border-right:1.5px solid #465f88;border-bottom:1.5px solid #465f88;transform:rotate(45deg) translateY(-2px)}' +
-    '.igf .combo:focus-visible{outline:2px solid #218a39;outline-offset:1px}' +
-    '.igf .combo.set{border-color:#218a39;background:#f4faf5}' +
+    '.igf .combo:after{content:"";flex:none;width:16px;height:16px;background:url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236b7280%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M8 9l4-4 4 4M16 15l-4 4-4-4%27/%3E%3C/svg%3E\") no-repeat center}' +
+    '.igf .combo:focus-visible,.igf .combo[aria-expanded=true]{outline:0;border-color:#218a39;box-shadow:0 0 0 3px rgba(33,138,57,.14)}' +
+    '.igf .combo.set{border-color:#9fd2ab}' +
     '.igf .pop{position:absolute;left:0;top:calc(100% + 4px);z-index:40;width:max(100%,300px);background:#fff;border:1px solid #d7dfec;border-radius:12px;box-shadow:0 18px 40px -16px rgba(11,31,58,.35);padding:8px}' +
     '.igf .pop input{width:100%;max-width:none;margin-bottom:6px}' +
     '.igf .pop ul{list-style:none;margin:0;padding:0;max-height:320px;overflow:auto}' +
@@ -148,22 +151,64 @@
   window.addEventListener('blur', function () { closeAll(); });
   document.addEventListener('focusin', function (e) { if (!e.target.closest || !e.target.closest('.igf .field')) closeAll(); });
 
+  // ------------------------------------------------------------------ the account's area
+  // People with provincial, district or facility access only see (and can only pick) their own area.
+  var allowedFacilities = [];
+  function area() {
+    var u = window.ImpiloAuth && window.ImpiloAuth.user;
+    var a = u && u.role !== 'admin' && u.access;
+    return a && a.level && a.level !== 'national' && a.areas && a.areas.length ? a : null;
+  }
+  function provinceOfDistrict(id) { var p = (geo ? geo.provinces : []).find(function (p) { return p.districts.some(function (d) { return d.id === id; }); }); return p ? p.id : ''; }
+  function allowedProvinceIds() {
+    var a = area(); if (!a) return null;
+    if (a.level === 'province') return a.areas;
+    if (a.level === 'district') return a.areas.map(provinceOfDistrict);
+    return allowedFacilities.map(function (f) { return f.provinceId; });
+  }
+  function clamp(next) {
+    var a = area(); if (!a || !geo) return next;
+    if (a.level === 'province') {
+      if (a.areas.indexOf(next.province) < 0) { next.province = a.areas[0]; next.district = ''; next.facility = ''; }
+      if (next.district && provinceOfDistrict(next.district) !== next.province) { next.district = ''; next.facility = ''; }
+    } else if (a.level === 'district') {
+      if (a.areas.indexOf(next.district) < 0) { next.district = a.areas[0]; next.facility = ''; }
+      next.province = provinceOfDistrict(next.district);
+    } else {
+      if (a.areas.indexOf(next.facility) < 0) next.facility = a.areas[0];
+      var f = allowedFacilities.find(function (x) { return x.id === next.facility; });
+      if (f) { next.province = f.provinceId || ''; next.district = f.districtId || ''; }
+    }
+    return next;
+  }
+  function areaLabel() {
+    var a = area(); if (!a) return '';
+    var names = a.level === 'province' ? a.areas.map(function (id) { var p = geo.provinces.find(function (x) { return x.id === id; }); return p ? p.name : id; })
+      : a.level === 'district' ? a.areas.map(function (id) { var d; geo.provinces.some(function (p) { d = p.districts.find(function (x) { return x.id === id; }); return d; }); return d ? d.name : id; })
+      : a.areas.map(function (id) { var f = allowedFacilities.find(function (x) { return x.id === id; }); return f ? f.name : id; });
+    return names.join(', ');
+  }
+
   function provinceOptions() {
-    return [{ value: '', label: 'All provinces' }].concat((geo ? geo.provinces : []).map(function (p) { return { value: p.id, label: p.name, sub: p.districts.length + ' districts' }; }));
+    var allowed = allowedProvinceIds();
+    var provs = (geo ? geo.provinces : []).filter(function (p) { return !allowed || allowed.indexOf(p.id) >= 0; });
+    return (allowed ? [] : [{ value: '', label: 'All provinces' }]).concat(provs.map(function (p) { return { value: p.id, label: p.name, sub: p.districts.length + ' districts' }; }));
   }
   function districtOptions() {
     // With a province chosen: its districts. With all provinces: every district, grouped by province.
     var provs = geo ? geo.provinces.filter(function (p) { return !filters.province || p.id === filters.province; }) : [];
-    var opts = [{ value: '', label: filters.province ? 'All districts' : 'All districts (all provinces)' }];
-    provs.forEach(function (p) { p.districts.forEach(function (d) { opts.push({ value: d.id, label: d.name, sub: filters.province ? '' : p.name, group: filters.province ? null : p.name, provinceId: p.id }); }); });
+    var a = area(), only = a && a.level === 'district' ? a.areas : a && a.level === 'facility' ? allowedFacilities.map(function (f) { return f.districtId; }) : null;
+    var opts = only ? [] : [{ value: '', label: filters.province ? 'All districts' : 'All districts (all provinces)' }];
+    provs.forEach(function (p) { p.districts.forEach(function (d) { if (only && only.indexOf(d.id) < 0) return; opts.push({ value: d.id, label: d.name, sub: filters.province ? '' : p.name, group: filters.province ? null : p.name, provinceId: p.id }); }); });
     return opts;
   }
   function typeOptions() {
     return TYPES.map(function (t) { return { value: t[0], label: t[1], group: /HOSPITAL/.test(t[0]) ? 'Hospitals' : null }; });
   }
   function facilityOptions() {
-    var list = facilities.slice().sort(function (a, b) { return (b.hasData - a.hasData) || a.name.localeCompare(b.name); });
-    return [{ value: '', label: 'All facilities (' + fmt(list.length) + ')' }].concat(list.map(function (f) {
+    var ar = area(), only = ar && ar.level === 'facility' ? ar.areas : null;
+    var list = facilities.filter(function (f) { return !only || only.indexOf(f.id) >= 0; }).sort(function (a, b) { return (b.hasData - a.hasData) || a.name.localeCompare(b.name); });
+    return (only ? [] : [{ value: '', label: 'All facilities (' + fmt(list.length) + ')' }]).concat(list.map(function (f) {
       return { value: f.id, label: f.name, sub: (f.hasData ? 'Reporting · ' : '') + (f.typeLabel || '') + ' · ' + (f.district || '') + (filters.province ? '' : ', ' + (f.province || '')), facility: f };
     }));
   }
@@ -196,15 +241,24 @@
     el('igf-from').value = filters.from || (resolved && resolved.from) || ''; el('igf-to').value = filters.to || (resolved && resolved.to) || '';
     el('igf-from').closest('.igf').classList.toggle('is-custom', filters.period === 'custom');
   }
+  // Ask the data is a plain chat: no filter bar there.
+  function showHideBar() {
+    var host = document.getElementById('impilo-global-filters'); if (!host) return;
+    var want = activeSection() === 'ask' ? 'none' : '';
+    if (host.style.display !== want) host.style.display = want;
+  }
   function renderScope() {
+    showHideBar();
     var box = el('igf-scope'); if (!box || !resolved) return;
     var active = activeSection(), applies = !active || APPLIES_TO[active];
     var r = resolved;
     var html = '<span class="tag">Filters apply across the portal</span>' +
       '<span>Showing <b>' + esc(r.label) + '</b>' + (r.typeLabel ? ' · ' + esc(r.typeLabel) : '') + ' · <b>' + day(r.from) + ' – ' + day(r.to) + '</b></span>' +
       '<span>' + fmt(r.facilityCount) + ' ' + (r.facilityCount === 1 ? 'facility' : 'facilities') + '</span>' +
+      (area() ? '<span class="pill area" title="Your account covers this area only">Your area: ' + esc(areaLabel()) + '</span>' : '') +
       (r.reportingIds.length ? '<span class="pill on">' + fmt(r.reportingIds.length) + ' reporting: ' + esc(r.reportingNames.join(', ')) + '</span>' : '<span class="pill off">No facility in this selection reports data yet</span>') +
-      (applies ? '' : active === 'config' ? '<span class="note">Filters don\'t affect configuration.</span>' : '<span class="note">This section uses demonstration data, so these filters don\'t change it.</span>');
+      (lastUpdated ? '<span class="upd" title="Time of the newest record received from reporting facilities">' + esc(lastUpdatedText()) + '</span>' : '') +
+      (active === 'workspace' ? '<span class="note">The workspace has its own period and filters.</span>' : active === 'users' ? '<span class="note">Filters don\'t affect user management.</span>' : active === 'reports' ? '<span class="note">Each report keeps its own place and period. Use \'Use portal filters\' in a report to copy these in.</span>' : active === 'geo' ? '<span class="note">Province and facility type apply to the map. Its period is set on the map\'s timeline.</span>' : applies ? '' : active === 'config' ? '<span class="note">Filters don\'t affect configuration.</span>' : '<span class="note">This section uses demonstration data, so these filters don\'t change it.</span>');
     // Only touch the DOM when the text changes: the page observer below would otherwise loop.
     if (box.innerHTML !== html && box.dataset.html !== html) { box.innerHTML = html; box.dataset.html = html; }
   }
@@ -217,7 +271,7 @@
     if ('district' in patch && patch.district !== filters.district && !('facility' in patch)) next.facility = '';
     if ('type' in patch && patch.type !== filters.type && !('facility' in patch)) next.facility = '';
     if (next.period !== 'custom') { next.from = ''; next.to = ''; }
-    filters = next; save(); refresh();
+    filters = clamp(next); save(); syncControls(); refresh();
   }
 
   async function refresh() {
@@ -272,20 +326,21 @@
 
   // ------------------------------------------------------------------ last updated (portal header)
   // Time of the newest record in the warehouse, shown on the Overview and Registers headers.
-  function showLastUpdated() {
-    var box = document.getElementById('impilo-last-updated'); if (!box || !lastUpdated) return;
+  function lastUpdatedText() {
+    if (!lastUpdated) return '';
     var d = new Date(String(lastUpdated).replace(' ', 'T'));
-    var text = 'Last updated: ' + (isNaN(d) ? lastUpdated : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
+    return 'Last updated: ' + (isNaN(d) ? lastUpdated : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
       (String(lastUpdated).length > 10 ? ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''));
-    if (box.textContent !== text) { box.textContent = text; box.title = 'Time of the newest record received from reporting facilities'; }
   }
+  // The page header that held this is gone; the time now sits at the end of the filter bar.
+  function showLastUpdated() { renderScope(); }
 
   // ------------------------------------------------------------------ section awareness
   function activeSection() {
     var b = document.querySelector('nav[aria-label="Portal sections"] button[aria-current="page"]');
     if (!b) return null;
     var t = b.textContent.trim().toLowerCase();
-    return t.indexOf('configuration') === 0 ? 'config' : t.indexOf('overview') === 0 ? 'overview' : t.indexOf('registers') === 0 ? 'registers' : t.indexOf('data intelligence') === 0 ? 'intel' : t.indexOf('reports') === 0 ? 'reports' : t.indexOf('facilities') === 0 ? 'facilities' : 'ask';
+    return t.indexOf('configuration') === 0 ? 'config' : t.indexOf('data workspace') === 0 ? 'workspace' : t.indexOf('users') === 0 ? 'users' : t.indexOf('geospatial') === 0 ? 'geo' : t.indexOf('overview') === 0 ? 'overview' : t.indexOf('registers') === 0 ? 'registers' : t.indexOf('data intelligence') === 0 ? 'intel' : t.indexOf('reports') === 0 ? 'reports' : t.indexOf('facilities') === 0 ? 'facilities' : 'ask';
   }
 
   // ------------------------------------------------------------------ mount
@@ -318,6 +373,10 @@
       var res = await Promise.all([fetch(API + '/geography', { cache: 'no-store' }), fetch(API + '/facility', { cache: 'no-store' })]);
       if (!res[0].ok || !res[1].ok) throw Error();
       geo = await res[0].json(); var site = await res[1].json(); latestDate = site.latestDate; lastUpdated = site.lastUpdated || site.latestDate;
+      if (area() && area().level === 'facility') {
+        try { var all = await (await fetch(API + '/facilities', { cache: 'no-store' })).json(); allowedFacilities = all.data.filter(function (f) { return area().areas.indexOf(f.id) >= 0; }); } catch (e) { }
+      }
+      filters = clamp(Object.assign({}, filters)); save();
       ready = true; mount(); showLastUpdated(); await refresh();
     } catch (e) { showError(); }
   }

@@ -1,0 +1,96 @@
+name,kind,latitude,longitude,aliases,source
+Avondale,suburb,-17.796,31.039,avondale suburb|avondale shops,approximate suburb centre - please check
+Avondale West,suburb,-17.79,31.023,avoidable west|avondale west suburb,approximate suburb centre - please check
+Strathaven,suburb,-17.796,31.026,strathaven suburb|strath haven,approximate suburb centre - please check
+Emerald Hill,suburb,-17.788,31.015,emeraldhill|emarald hill|emerald|emerald hills,approximate suburb centre - please check
+Avonlea,suburb,-17.78,31.03,avonlea suburb,approximate suburb centre - please check
+Marlborough,suburb,-17.755,31.004,malborough|marlborogh|marborough,approximate suburb centre - please check
+Greencroft,suburb,-17.776,31.0,green croft,approximate suburb centre - please check
+Mabelreign,suburb,-17.79,30.993,mabelreighn|mabelrein,approximate suburb centre - please check
+Westgate,suburb,-17.765,30.983,west gate|westgate suburb,approximate suburb centre - please check
+Sunridge,suburb,-17.77,30.968,sun ridge,approximate suburb centre - please check
+Bluff Hill,suburb,-17.778,30.975,bluffhill|bluff hills,approximate suburb centre - please check
+Goodhope,suburb,-17.77,30.958,good hope|goodhope farm,approximate suburb centre - please check
+Madokero,suburb,-17.768,30.945,,approximate suburb centre - please check
+Mount Pleasant,suburb,-17.77,31.048,mount pleasant suburb,approximate suburb centre - please check
+Pleasant Heights,suburb,-17.762,31.04,,approximate suburb centre - please check
+Sentosa,suburb,-17.765,31.023,,approximate suburb centre - please check
+Alexandra Park,suburb,-17.787,31.056,alex park,approximate suburb centre - please check
+Belgravia,suburb,-17.807,31.047,,approximate suburb centre - please check
+Kensington,suburb,-17.8,31.034,,approximate suburb centre - please check
+Milton Park,suburb,-17.818,31.03,,approximate suburb centre - please check
+Avenues,suburb,-17.818,31.056,the avenues,approximate suburb centre - please check
+Belvedere,suburb,-17.83,31.02,,approximate suburb centre - please check
+Tynwald,suburb,-17.815,30.97,,approximate suburb centre - please check
+Dzivarasekwa,suburb,-17.805,30.95,dzivaresekwa|dzivarasekwa extension,approximate suburb centre - please check
+Kuwadzana,suburb,-17.83,30.925,,approximate suburb centre - please check
+Kambuzuma,suburb,-17.853,30.964,,approximate suburb centre - please check
+Warren Park,suburb,-17.832,30.983,,approximate suburb centre - please check
+Mufakose,suburb,-17.87,30.93,,approximate suburb centre - please check
+Budiriro,suburb,-17.892,30.93,,approximate suburb centre - please check
+Glen View,suburb,-17.885,30.955,glenview,approximate suburb centre - please check
+Highfield,suburb,-17.875,30.995,highfields,approximate suburb centre - please check
+Mbare,suburb,-17.858,31.04,,approximate suburb centre - please check
+Waterfalls,suburb,-17.885,31.03,,approximate suburb centre - please check
+Hatfield,suburb,-17.88,31.09,,approximate suburb centre - please check
+Greendale,suburb,-17.815,31.11,,approximate suburb centre - please check
+Highlands,suburb,-17.793,31.093,,approximate suburb centre - please check
+Borrowdale,suburb,-17.75,31.09,,approximate suburb centre - please check
+Hatcliffe,suburb,-17.695,31.1,,approximate suburb centre - please check
+Mabvuku,suburb,-17.835,31.17,,approximate suburb centre - please check
+Mount Hampden,suburb,-17.705,30.95,hampden|mount hampden suburb|hampden suburb,approximate suburb centre - please check
+Stapleford,suburb,-17.725,30.925,stappleford|staplefort,approximate suburb centre - please check
+Lumanda Farm,suburb,-17.715,30.93,lumanda,approximate suburb centre - please check
+New Parliament,suburb,-17.712,30.953,parliament,approximate suburb centre - please check
+Seke,suburb,-18.03,31.1,,approximate suburb centre - please check
+Harare,city,-17.82772,31.05337,harare cbd|harare suburb,GeoNames (CC BY 4.0)
+Chitungwiza,town,-18.01274,31.07555,chitungwiza,GeoNames (CC BY 4.0)
+Epworth,town,-17.89,31.1475,,GeoNames (CC BY 4.0)
+Norton,town,-17.88333,30.7,,GeoNames (CC BY 4.0)
+Ruwa,town,-17.89,31.245,,approximate town centre - please check
+Nyabira,town,-17.67,30.73,,approximate town centre - please check
+Mazowe,town,-17.50404,30.97388,mazoe,GeoNames (CC BY 4.0)
+Arcturus,town,-17.783,31.32,,approximate town centre - please check
+Banket,town,-17.38333,30.4,,GeoNames (CC BY 4.0)
+Chakari,town,-18.06294,29.89246,,GeoNames (CC BY 4.0)
+Zvimba,town,-17.71,30.2,murombedzi,approximate town centre - please check
+Masvingo,town,-20.06373,30.82766,fort victoria,GeoNames (CC BY 4.0)
+Bulawayo,city,-20.15,28.58333,byo,GeoNames (CC BY 4.0)
+Bindura,town,-17.30192,31.33056,,GeoNames (CC BY 4.0)
+Mutare,city,-18.9707,32.67086,,GeoNames (CC BY 4.0)
+Marondera,town,-18.18527,31.55193,,GeoNames (CC BY 4.0)
+Kadoma,town,-18.33328,29.91534,,GeoNames (CC BY 4.0)
+Beitbridge,town,-22.21667,30.0,beit bridge,GeoNames (CC BY 4.0)
+Gokwe,town,-18.20476,28.9349,,GeoNames (CC BY 4.0)
+Chinhoyi,town,-17.36667,30.2,sinoia,GeoNames (CC BY 4.0)
+Beatrice,town,-18.25283,30.8473,,GeoNames (CC BY 4.0)
+Murehwa,town,-17.64322,31.784,murewa|mrewa,GeoNames (CC BY 4.0)
+Birchenough Bridge,town,-19.9667,32.3333,birchenough,approximate town centre - please check
+Chatsworth,town,-19.6333,31.0167,,approximate town centre - please check
+Chivhu,town,-19.02112,30.89218,enkeldoorn,GeoNames (CC BY 4.0)
+Mutoko,town,-17.39699,32.22677,,GeoNames (CC BY 4.0)
+Binga,town,-17.62027,27.34139,,GeoNames (CC BY 4.0)
+Zvishavane,town,-20.32674,30.06648,shabani,GeoNames (CC BY 4.0)
+Glendale,town,-17.35514,31.06718,,GeoNames (CC BY 4.0)
+Jerera,town,-20.3333,31.4833,zaka,approximate town centre - please check
+Mvurwi,town,-17.03333,30.85,,GeoNames (CC BY 4.0)
+Mwenezi,town,-21.417,30.733,rutenga,approximate town centre - please check
+Gweru,city,-19.45,29.81667,gwelo,GeoNames (CC BY 4.0)
+Kwekwe,town,-18.92809,29.81486,que que,GeoNames (CC BY 4.0)
+Victoria Falls,town,-17.93285,25.83066,vic falls,GeoNames (CC BY 4.0)
+Hwange,town,-18.36446,26.49877,wankie,GeoNames (CC BY 4.0)
+Chegutu,town,-18.13021,30.14074,hartley,GeoNames (CC BY 4.0)
+Karoi,town,-16.80993,29.69247,,GeoNames (CC BY 4.0)
+Kariba,town,-16.51667,28.8,,GeoNames (CC BY 4.0)
+Rusape,town,-18.52785,32.12843,,GeoNames (CC BY 4.0)
+Chipinge,town,-20.18833,32.62365,,GeoNames (CC BY 4.0)
+Gwanda,town,-20.93333,29.0,,GeoNames (CC BY 4.0)
+Plumtree,town,-20.48333,27.81667,,GeoNames (CC BY 4.0)
+Shurugwi,town,-19.67016,30.00589,selukwe,GeoNames (CC BY 4.0)
+Redcliff,town,-19.03333,29.78333,,GeoNames (CC BY 4.0)
+Goromonzi,town,-17.8667,31.3667,,approximate town centre - please check
+Domboshava,town,-17.6167,31.1333,,approximate town centre - please check
+Gutu,town,-19.65,31.167,,approximate town centre - please check
+Centenary,town,-16.733,31.117,muzarabani centenary,approximate town centre - please check
+Muzarabani,town,-16.383,31.017,,approximate town centre - please check
+Wilkins Hospital,site,-17.8160,31.0600,wilkins,approximate suburb centre - please check

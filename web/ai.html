@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script src="./auth.js?v=1"></script>
+<head><script src="./auth.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ask the data</title>
@@ -71,6 +71,24 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .wa-chat:hover .star,.star.on{opacity:1}.star:hover{background:#eef1f3}
 .star.big{opacity:1;padding:6px}.star.big svg{width:21px;height:21px}
 .wa-chat .del{bottom:8px;right:40px}
+.avatar.bot{background:none;padding:0;filter:drop-shadow(0 1px 2px rgba(11,20,26,.18))}
+.avatar.bot svg,.mini svg,.hero-bot svg{width:100%;height:100%;display:block}
+.avatar.bot.big{width:42px;height:42px}
+.botsvg .eye{transform-box:fill-box;transform-origin:center;animation:botblink 5s infinite}
+@keyframes botblink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.12)}}
+.thinking .botsvg .ant{animation:botant .7s ease-in-out infinite alternate}
+.thinking .botsvg .eye{animation:botlook 1.4s ease-in-out infinite}
+@keyframes botant{from{fill:#fbbf24}to{fill:#fef3c7;r:3.4}}
+@keyframes botlook{0%,100%{transform:translateX(0)}30%{transform:translateX(-1.2px)}70%{transform:translateX(1.2px)}}
+.botrow{align-self:flex-start;display:flex;align-items:flex-start;gap:8px;max-width:min(84%,670px);margin-top:6px}
+.botrow.cont{margin-top:2px}
+.botrow .bub{max-width:100%;margin-top:0}
+.mini{flex:none;width:30px;height:30px;margin-top:1px;filter:drop-shadow(0 1px 1.5px rgba(11,20,26,.18))}
+.wa-hero{display:flex;flex-direction:column;align-items:center;gap:3px;margin:8px auto 4px;text-align:center;color:#3b4a54}
+.wa-hero b{font-size:16px;color:#111b21;margin-top:6px}
+.wa-hero span{font-size:13px;color:#667781}
+.hero-bot{width:84px;height:84px;filter:drop-shadow(0 6px 14px rgba(20,83,45,.28));animation:botfloat 3.2s ease-in-out infinite}
+@keyframes botfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .wa-empty-list{padding:24px 18px;color:#667781;font-size:13px;line-height:1.5}
 .avatar{flex:none;width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
 .avatar svg{width:22px;height:22px}
@@ -144,6 +162,49 @@ details.adv summary{cursor:pointer;color:var(--green-dark);font-weight:600;font-
 .toggle input{margin-top:3px;accent-color:var(--green);width:16px;height:16px}
 .toast{position:fixed;right:16px;bottom:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);display:none;max-width:420px;z-index:9}
 @media(max-width:1000px){.grid2,.train,.optgrid{grid-template-columns:1fr}.styles{grid-template-columns:1fr 1fr}}
+
+/* ---- Ask the data: simple dotted layout ---- */
+.wa{grid-template-columns:270px 1fr;height:760px;border:1px solid #e5e7eb;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.wa-list{background:#fff}.wa-list-head{background:#fff}
+.wa-pane{position:relative;background-color:#fafafa;background-image:radial-gradient(#d4d7dd 1.1px,transparent 1.3px);background-size:20px 20px}
+.wa-head{background:rgba(250,250,250,.85);backdrop-filter:blur(4px);border-bottom:1px solid #eceef1;padding:10px 20px}
+.wa-head.bare{position:absolute;top:0;right:0;left:auto;background:none;border:0;z-index:2;backdrop-filter:none}
+.wa-head .who b{font-size:14px;font-weight:600}
+.wa-msgs{background:none!important;padding:22px max(24px,calc(50% - 390px)) 10px;gap:4px}
+.wa-msgs.start{justify-content:center;align-items:center}
+.wa-start{width:min(680px,100%);display:flex;flex-direction:column;align-items:center;gap:22px;margin-top:-40px}
+.wa-start h1{font-size:30px;font-weight:700;letter-spacing:-.02em;color:#111827;margin:0;text-align:center}
+.wa-start .wa-compose{width:100%;padding:0}
+.wa-start .wa-sugg{margin-top:-4px}
+.wa-sugg button{background:#fff;border:1px solid #e5e7eb;box-shadow:none;color:#374151;border-radius:999px}
+.wa-sugg button:hover{border-color:var(--green);color:var(--green-dark);background:#fff}
+.wa-compose{background:none;padding:10px max(24px,calc(50% - 390px)) 22px;display:block}
+.wa-compose .wa-pill{position:relative;background:#fff;border:1px solid #dfe3ea;border-radius:22px;box-shadow:0 10px 30px -14px rgba(15,23,42,.25);transition:border-color .15s,box-shadow .15s}
+.wa-compose .wa-pill:focus-within{border-color:#9fd2ab;box-shadow:0 0 0 4px rgba(33,138,57,.10),0 10px 30px -14px rgba(15,23,42,.25)}
+.wa-compose textarea{display:block;width:100%;border:0!important;outline:0!important;background:none;border-radius:22px;padding:19px 70px 19px 22px;min-height:62px;max-height:180px;font-size:15px;line-height:1.45;resize:none;box-shadow:none}
+.wa-send{position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:13px;background:linear-gradient(180deg,#2f9e4a,#1b7a33);box-shadow:0 4px 10px -3px rgba(27,122,51,.55)}
+.wa-send:hover:not(:disabled){background:linear-gradient(180deg,#279143,#14532d)}
+.wa-send:disabled{background:#c9d8cd;box-shadow:none}
+.wa-send svg{width:19px;height:19px}
+.wa-day{background:none;box-shadow:none;color:#9ca3af;font-weight:600}
+.bub{box-shadow:none;border-radius:16px;font-size:14.2px;padding:9px 13px 7px}
+.bub:before{display:none!important}
+.bub.me{background:#e6f4ea;border:1px solid #d3ead9;border-top-right-radius:16px}
+.bub.bot{background:#fff;border:1px solid #eceef1;border-top-left-radius:16px}
+.bub .foot svg{display:none}
+.wa-banner{margin:14px max(24px,calc(50% - 390px)) 0}
+
+.bub.has-chart{width:min(100%,700px);max-width:min(100%,700px)}
+.botrow:has(.bub.has-chart){max-width:min(92%,760px);width:100%}
+.chartbox{margin:2px 0 8px}
+.ctitle b{display:block;font-size:14px;color:#111827}.ctitle span{display:block;font-size:11.5px;color:#6b7280;margin-top:1px}
+.clegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:#475569;margin:8px 0 -2px}.clegend span{display:inline-flex;align-items:center;gap:6px}.clegend i{width:10px;height:10px;border-radius:3px}
+svg.chart{width:100%;height:auto;display:block;margin-top:8px}
+.cactions{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:4px;font-size:12px}
+.cactions summary{cursor:pointer;color:var(--green-dark);font-weight:600}
+.cactions table{border-collapse:collapse;margin-top:6px;font-size:12px}.cactions th,.cactions td{border-bottom:1px solid #eef1f4;padding:4px 8px;text-align:right;white-space:nowrap}
+.cactions th:first-child,.cactions td:first-child{text-align:left}.cactions th{color:#475569;font-weight:600}.cactions tfoot td{font-weight:700}
+.pngbtn{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:600;color:#374151;cursor:pointer;white-space:nowrap}.pngbtn:hover{border-color:var(--green);color:var(--green-dark)}
 </style>
 </head>
 <body>
@@ -197,17 +258,19 @@ function bindGo(){document.querySelectorAll('[data-go]').forEach(b=>b.addEventLi
 // Portal-wide filters: the assistant answers for the same place and period as the rest of the portal.
 window.addEventListener('message',e=>{if(e.source!==window.parent||e.data?.type!=='impilo-filters')return;portal=e.data;if(tab==='ask')updateScope()});
 if(window.parent!==window)parent.postMessage({type:'impilo-filters-request'},'*');
-function filters(){if(!portal)return{};const f=portal.filters,r=portal.resolved;return{province:f.province,district:f.district,type:f.type,facility:f.facility,from:r?.from,to:r?.to}}
+function filters(){if(MODE==='ask')return{};if(!portal)return{};const f=portal.filters,r=portal.resolved;return{province:f.province,district:f.district,type:f.type,facility:f.facility,from:r?.from,to:r?.to}}
 function updateScope(){const el=$('scope');if(!el)return;const r=portal?.resolved;el.innerHTML=r?`Answers use portal figures for <b>${esc(r.label)}</b>${r.typeLabel?' · '+esc(r.typeLabel):''} · ${day(r.from)} – ${day(r.to)}`:'Answers use national figures for the last 12 months of data.'}
 
 // ------------------------------------------------------------------ ask
 // WhatsApp-style chat. Conversations are saved in this browser (localStorage) so you can come back and
 // continue them; the last few messages are sent with each question so the assistant follows the thread.
-const SUGGESTIONS=['How many people tested HIV positive?','Which facility has the most HIV cases?','How many OPD visits were there, and how do they split by sex?','Which month had the most attendances?','Which age group has the most HIV positive cases?','Which provinces are not reporting yet?'];
+const SUGGESTIONS=['Graph HIV positive cases by age for females and males','How many people tested HIV positive?','Chart OPD visits by month','Which facility has the most HIV cases?','How many OPD visits were there, and how do they split by sex?','Which month had the most attendances?','Which age group has the most HIV positive cases?','Which provinces are not reporting yet?'];
 // Each signed-in user has their own saved conversations.
 const CHATS_KEY='impilo.ai.chats.v1.'+(window.ImpiloAuth?.user?.username||'guest'),MAX_CHATS=60,MAX_MSGS=200;
-const BOT_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M8.5 13h.01M15.5 13h.01M9.5 16.5h5"/></svg>';
-const SEND_ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8z"/></svg>';
+// Friendly bot face used for the assistant everywhere in the chat (list, header, messages, welcome).
+const BOT_ICON='<svg class="botsvg" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="botbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34b35a"/><stop offset="1" stop-color="#14532d"/></linearGradient><linearGradient id="botface" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e3f3e7"/></linearGradient></defs><circle cx="24" cy="24" r="24" fill="url(#botbg)"/><path d="M24 13.5V9.5" stroke="#d9f2df" stroke-width="2" stroke-linecap="round"/><circle class="ant" cx="24" cy="8" r="2.7" fill="#fbbf24"/><rect x="8.5" y="20.5" width="4.5" height="9" rx="2.2" fill="#bfe6c9"/><rect x="35" y="20.5" width="4.5" height="9" rx="2.2" fill="#bfe6c9"/><rect x="12" y="13.5" width="24" height="21" rx="7.5" fill="url(#botface)"/><rect x="15.5" y="17.5" width="17" height="10.5" rx="5.25" fill="#0f3d22"/><circle class="eye" cx="20.6" cy="22.7" r="2.3" fill="#5eead4"/><circle class="eye" cx="27.4" cy="22.7" r="2.3" fill="#5eead4"/><circle cx="21.3" cy="22" r=".7" fill="#fff"/><circle cx="28.1" cy="22" r=".7" fill="#fff"/><path d="M20.8 30.6q3.2 2.3 6.4 0" fill="none" stroke="#14532d" stroke-width="1.8" stroke-linecap="round"/><circle cx="16.4" cy="30.2" r="1.3" fill="#f9a8b8" opacity=".75"/><circle cx="31.6" cy="30.2" r="1.3" fill="#f9a8b8" opacity=".75"/><rect x="17.5" y="36" width="13" height="6.5" rx="3" fill="#d9f2df"/><circle cx="24" cy="39.2" r="1.4" fill="#34b35a"/></svg>';
+const SEND_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const greeting=()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
 const STOP_ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
 const STAR=(on)=>`<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M12 3.3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.6l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="${on?'#f5b301':'none'}" stroke="${on?'#f5b301':'#8696a0'}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
 const TICKS='<svg viewBox="0 0 16 11" aria-hidden="true"><path d="M11.07.65 4.98 7.37 2.4 4.86 1.3 5.97l3.73 3.63L12.2 1.75z" fill="#53bdeb"/><path d="M15.07.65 8.98 7.37l-.64-.62-1.1 1.13 1.79 1.72L16.2 1.75z" fill="#53bdeb"/></svg>';
@@ -229,10 +292,58 @@ function dayLabel(t){const d=new Date(t),today=new Date();const y=new Date();y.s
   return d.toDateString()===today.toDateString()?'Today':d.toDateString()===y.toDateString()?'Yesterday':d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}
 function listWhen(t){const d=new Date(t),today=new Date();return d.toDateString()===today.toDateString()?hhmm(t):d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
 const initials=n=>String(n||'AI').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+
+// ---------------------------------------------------------------- charts in answers
+// The figures come from the portal itself (api/charts.py); this only draws them.
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p}
+const nf=n=>Number(n).toLocaleString('en-GB');
+function chartSvg(c){
+  const cats=c.categories,series=c.series;
+  if(c.type==='pie'){
+    const s=series[0],tot=s.values.reduce((a,b)=>a+b,0)||1,R=92,cx=110,cy=105;let a0=-Math.PI/2;
+    const cols=['#218a39','#2563eb','#d97706','#c0367a','#0d9488','#7c3aed','#dc2626','#475569'];
+    const sl=s.values.map((v,k)=>{if(!v)return'';const a1=a0+v/tot*Math.PI*2,big=a1-a0>Math.PI?1:0,mid=(a0+a1)/2;
+      const d=v===tot?`M${cx-R},${cy}a${R},${R} 0 1 0 ${2*R},0a${R},${R} 0 1 0 ${-2*R},0`:`M${cx},${cy}L${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)}A${R},${R} 0 ${big} 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)}Z`;
+      a0=a1;return`<path d="${d}" fill="${cols[k%cols.length]}" stroke="#fff" stroke-width="2"><title>${esc(cats[k])}: ${nf(v)}</title></path>`+(v/tot>.07?`<text x="${cx+R*.62*Math.cos(mid)}" y="${cy+R*.62*Math.sin(mid)}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="11" font-weight="700">${Math.round(v/tot*100)}%</text>`:'')}).join('');
+    const leg=cats.map((n,k)=>`<g transform="translate(240,${22+k*20})"><rect width="11" height="11" rx="3" fill="${cols[k%cols.length]}"/><text x="17" y="9.5" font-size="12" fill="#334155">${esc(n)}: ${nf(s.values[k])}</text></g>`).join('');
+    return`<svg class="chart" viewBox="0 0 480 ${Math.max(215,30+cats.length*20)}" role="img" aria-label="${esc(c.title)}">${sl}${leg}</svg>`;
+  }
+  const W=640,H=270,L=44,T=12,Rm=10,rot=cats.length>7,B=rot?64:28,pw=W-L-Rm,ph=H-T-B,raw=Math.max(1,...series.flatMap(s=>s.values)),max=raw<=40?Math.max(4,Math.ceil(raw/4)*4):niceMax(raw);
+  const y=v=>T+ph-(v/max)*ph,step=pw/Math.max(1,cats.length);
+  const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${L}" x2="${W-Rm}" y1="${y(max*f)}" y2="${y(max*f)}" stroke="#eef1f4"/><text x="${L-6}" y="${y(max*f)}" text-anchor="end" dominant-baseline="central" font-size="10.5" fill="#64748b">${nf(Math.round(max*f*100)/100)}</text>`).join('');
+  const labels=cats.map((n,k)=>{const x=L+step*k+step/2,show=cats.length<=20||k%Math.ceil(cats.length/20)===0;return show?`<text x="${x}" y="${H-B+14}" font-size="10.5" fill="#475569" text-anchor="${rot?'end':'middle'}"${rot?` transform="rotate(-35 ${x} ${H-B+14})"`:''}>${esc(String(n).length>16?String(n).slice(0,15)+'…':n)}</text>`:''}).join('');
+  let marks='';
+  if(c.type==='line')marks=series.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${s.values.map((v,k)=>`${L+step*k+step/2},${y(v)}`).join(' ')}"/>`+s.values.map((v,k)=>`<circle cx="${L+step*k+step/2}" cy="${y(v)}" r="3.3" fill="#fff" stroke="${s.color}" stroke-width="2"><title>${esc(cats[k])} · ${esc(s.name)}: ${nf(v)}</title></circle>`).join('')).join('');
+  else{const gw=step*.76,bw=gw/series.length;marks=series.map((s,j)=>s.values.map((v,k)=>`<rect x="${L+step*k+(step-gw)/2+bw*j}" y="${y(v)}" width="${Math.max(1,bw-1.5)}" height="${Math.max(0,T+ph-y(v))}" rx="2.5" fill="${s.color}"><title>${esc(cats[k])} · ${esc(s.name)}: ${nf(v)}</title></rect>`+(series.length*cats.length<=24&&v?`<text x="${L+step*k+(step-gw)/2+bw*j+(bw-1.5)/2}" y="${y(v)-4}" text-anchor="middle" font-size="10" fill="#475569">${nf(v)}</text>`:'')).join('')).join('')}
+  return`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(c.title)}">${grid}<line x1="${L}" x2="${W-Rm}" y1="${T+ph}" y2="${T+ph}" stroke="#cbd5e1"/>${marks}${labels}</svg>`;
+}
+function chartHtml(c){
+  const legend=c.series.length>1&&c.type!=='pie'?`<div class="clegend">${c.series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>`:'';
+  const t=c.table,cell=v=>v==null?'–':typeof v==='number'?nf(v):esc(v);
+  return`<div class="chartbox"><div class="ctitle"><b>${esc(c.title)}</b><span>${esc(c.subtitle||'')}</span></div>${legend}${chartSvg(c)}
+    <div class="cactions"><details><summary>Show figures</summary><table><thead><tr>${t.header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r=>`<tr>${r.map(cell).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>${t.total?`<tfoot><tr>${t.total.map(cell).map(v=>`<td>${v}</td>`).join('')}</tr></tfoot>`:''}</table></details>
+    <button type="button" class="pngbtn" title="Download the chart as a picture">Download image</button></div></div>`;
+}
+// Save a chart as a PNG (title included), e.g. for a slide or a report.
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.pngbtn');if(!b)return;
+  const box=b.closest('.chartbox'),svg=box.querySelector('svg.chart'),title=box.querySelector('.ctitle b').textContent,sub=box.querySelector('.ctitle span').textContent;
+  const vb=svg.viewBox.baseVal,scale=2,W=vb.width,H=vb.height+56,clone=svg.cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('width',W);clone.setAttribute('height',vb.height);clone.setAttribute('font-family','Inter, Segoe UI, Arial, sans-serif');
+  const img=new Image(),url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'}));
+  img.onload=()=>{const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;const g=cv.getContext('2d');g.scale(scale,scale);g.fillStyle='#fff';g.fillRect(0,0,W,H);
+    g.fillStyle='#0f172a';g.font='600 14px Inter, Segoe UI, Arial';g.fillText(title,12,22);g.fillStyle='#64748b';g.font='11.5px Inter, Segoe UI, Arial';g.fillText(sub,12,40);g.drawImage(img,0,52,W,vb.height);URL.revokeObjectURL(url);
+    const a=document.createElement('a');a.download=title.replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'.png';a.href=cv.toDataURL('image/png');a.click()};
+  img.src=url;
+});
+
+// Older saved answers named the model and timing; people only need to know where the figures came from.
+const cleanMeta=t=>String(t||'').split(' · ').filter(x=>x&&!/^[\w.\-\/]+:[\w.\-]+$/.test(x.trim())&&!/^\d+(\.\d+)? s$/.test(x.trim())).map((x,i)=>i?x:x[0].toUpperCase()+x.slice(1)).join(' · ');
 function bubble(m,prev){
   const me=m.role==='user',cont=prev&&prev.role===m.role&&!m.error&&!prev.error;
   const body=me?esc(m.content).replace(/\n/g,'<br>'):(m.content?mdLite(m.content):'<span class="dots"><i></i><i></i><i></i></span>');
-  return `<div class="bub ${me?'me':'bot'}${cont?' cont':''}${m.error?' err':''}${m.writing?' writing':''}" data-t="${esc(m.time)}"><span class="txt">${body}</span><span class="foot">${hhmm(m.time)}${me?TICKS:''}</span>${!me&&m.meta?`<span class="src">${esc(m.meta)}</span>`:''}</div>`;
+  const html=`<div class="bub ${me?'me':'bot'}${cont?' cont':''}${m.error?' err':''}${m.writing?' writing':''}${m.chart?' has-chart':''}" data-t="${esc(m.time)}">${m.chart?chartHtml(m.chart):''}<span class="txt">${m.chart&&!m.content&&m.writing?'':body}</span><span class="foot">${hhmm(m.time)}${me?TICKS:''}</span>${!me&&cleanMeta(m.meta)?`<span class="src">${esc(cleanMeta(m.meta))}</span>`:''}</div>`;
+  return me?html:`<div class="botrow${cont?' cont':''}"><div class="mini${m.writing||!m.content?' thinking':''}">${cont?'':BOT_ICON}</div>${html}</div>`;
 }
 function messagesHtml(c){
   let html='',lastDay='',prev=null;
@@ -250,7 +361,10 @@ function renderAsk(){
   const q=chatSearch.toLowerCase();
   const list=chats.filter(x=>!q||x.title.toLowerCase().includes(q)||x.messages.some(m=>m.content.toLowerCase().includes(q)));
   const last=x=>x.messages[x.messages.length-1];
-  const statusLine=abort?'<span class="typing">typing…</span>':`<span>${model?esc(model):'no model chosen'}${a?.usePortalData?' · answers from live portal figures':''}</span>`;
+  const statusLine=abort?'<span class="typing">typing…</span>':`<span>${model?(a?.usePortalData?'answers from live portal figures':'online'):'not available yet'}</span>`;
+  const assistSel=assist.length>1?`<select id="assistantSel" aria-label="Assistant">${assist.map(x=>`<option value="${esc(x.id)}"${x.id===a?.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select>`:'';
+  const composer=`<form class="wa-compose" id="composer"><div class="wa-pill"><textarea id="q" placeholder="${canAsk?'Ask about the portal\'s figures…':'The assistant isn\'t available yet'}" rows="1"${canAsk?'':' disabled'}></textarea>
+        <button class="wa-send" id="send" aria-label="${abort?'Stop':'Send'}"${canAsk||abort?'':' disabled'}>${abort?STOP_ICON:SEND_ICON}</button></div></form>`;
   $('view').innerHTML=`<div class="wa">
     <aside class="wa-list" aria-label="Conversations">
       <div class="wa-list-head"><h2>Chats</h2><button class="wa-new" id="newChat">+ New chat</button></div>
@@ -258,21 +372,17 @@ function renderAsk(){
       <div class="wa-filter" role="tablist" aria-label="Show"><button role="tab" data-filter="all" aria-selected="${chatFilter==='all'}">All</button><button role="tab" data-filter="fav" aria-selected="${chatFilter==='fav'}">${STAR(chatFilter==='fav')} Favourites (${chats.filter(c=>c.favourite).length})</button></div>
       <div class="wa-chats">${(()=>{const shown=chatFilter==='fav'?list.filter(x=>x.favourite):list;const fav=shown.filter(x=>x.favourite),rest=shown.filter(x=>!x.favourite);
         const item=x=>{const lm=last(x);const an=assist.find(y=>y.id===x.assistantId)?.name;
-          return `<div class="wa-chat${x.id===currentChat?' on':''}" data-chat="${esc(x.id)}"><div class="avatar">${initials(an)}</div><div class="t"><b>${esc(x.title)}</b><span>${lm?(lm.role==='user'?'You: ':'')+esc(lm.content.replace(/\s+/g,' ').slice(0,80)):'No messages yet'}</span></div>
+          return `<div class="wa-chat${x.id===currentChat?' on':''}" data-chat="${esc(x.id)}"><div class="avatar bot" title="${esc(an||'Assistant')}">${BOT_ICON}</div><div class="t"><b>${esc(x.title)}</b><span>${lm?(lm.role==='user'?'You: ':'')+esc(lm.content.replace(/\s+/g,' ').slice(0,80)):'No messages yet'}</span></div>
             <div class="side"><span class="when">${listWhen(x.updated)}</span><button class="star${x.favourite?' on':''}" data-fav="${esc(x.id)}" aria-pressed="${!!x.favourite}" title="${x.favourite?'Remove from favourites':'Add to favourites'}">${STAR(x.favourite)}</button></div>
             <button class="del${confirmChatDelete===x.id?' confirm':''}" data-delchat="${esc(x.id)}">${confirmChatDelete===x.id?'Confirm delete':'Delete'}</button></div>`};
         if(!shown.length)return `<div class="wa-empty-list">${chatFilter==='fav'?'No favourite chats yet. Tap the star on a chat to keep it here.':chats.length?'No conversations match your search.':'Your conversations will appear here. They are saved in this browser, so you can come back and continue them.'}</div>`;
         return (fav.length&&chatFilter==='all'?`<div class="wa-sec">${STAR(true)} Favourites</div>`:'')+fav.map(item).join('')+(fav.length&&rest.length?'<div class="wa-sec">All chats</div>':'')+rest.map(item).join('')})()}</div>
     </aside>
     <section class="wa-pane">
-      <div class="wa-head"><div class="avatar">${BOT_ICON}</div><div class="who"><b>${esc(c?.title&&c.messages.length?c.title:(a?.name||'Assistant'))}</b><span id="waStatus">${c?.messages.length?esc(a?.name||'')+' · ':''}${statusLine}</span></div>${c?`<button class="star big${c.favourite?' on':''}" data-fav="${esc(c.id)}" aria-pressed="${!!c.favourite}" title="${c.favourite?'Remove from favourites':'Add to favourites'}">${STAR(c.favourite)}</button>`:''}
-        <select id="assistantSel" aria-label="Assistant">${assist.map(x=>`<option value="${esc(x.id)}"${x.id===a?.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
-      <div class="wa-scope" id="scope"></div>
-      ${!ready||!model?`<div class="wa-banner">${ollamaBanner()}${ready&&!model?`<div class="notice warn"><b>No model chosen yet.</b> Download one in <button class="linkbtn" data-go="models">Configuration → Models</button> and set it as the default.</div>`:''}</div>`:''}
-      <div class="wa-msgs" id="msgs" aria-live="polite">${c&&c.messages.length?messagesHtml(c)
-        :`<div class="wa-welcome">Ask about the figures in the portal. The assistant runs on this computer and only sees aggregated figures for the filters at the top, never patient records.</div><div class="wa-sugg">${SUGGESTIONS.map(s=>`<button${canAsk?'':' disabled'}>${esc(s)}</button>`).join('')}</div>`}</div>
-      <form class="wa-compose" id="composer"><textarea id="q" placeholder="${canAsk?'Type a message':'Start Ollama and choose a model to chat'}" rows="1"${canAsk?'':' disabled'}></textarea>
-        <button class="wa-send" id="send" aria-label="${abort?'Stop':'Send'}"${canAsk||abort?'':' disabled'}>${abort?STOP_ICON:SEND_ICON}</button></form>
+      ${c&&c.messages.length?`<div class="wa-head"><div class="who"><b>${esc(c.title)}</b><span id="waStatus">${statusLine}</span></div><button class="star big${c.favourite?' on':''}" data-fav="${esc(c.id)}" aria-pressed="${!!c.favourite}" title="${c.favourite?'Remove from favourites':'Add to favourites'}">${STAR(c.favourite)}</button>${assistSel}</div>`:`<div class="wa-head bare">${assistSel}</div>`}
+      ${!ready||!model?`<div class="wa-banner">${ollamaBanner()}${ready&&!model?`<div class="notice warn"><b>The assistant isn't set up yet.</b> An administrator can choose a model in <button class="linkbtn" data-go="models">Configuration → Models</button>.</div>`:''}</div>`:''}
+      ${c&&c.messages.length?`<div class="wa-msgs" id="msgs" aria-live="polite">${messagesHtml(c)}</div>${composer}`
+        :`<div class="wa-msgs start" id="msgs" aria-live="polite"><div class="wa-start"><h1>${greeting()}${window.ImpiloAuth?.user?.name?', '+esc(String(window.ImpiloAuth.user.name).split(/\s+/)[0]):''}</h1>${composer}<div class="wa-sugg">${SUGGESTIONS.slice(0,4).map(s=>`<button type="button">${esc(s)}</button>`).join('')}</div></div></div>`}
     </section></div>`;
   updateScope();bindGo();
   $('newChat').addEventListener('click',()=>{if(abort)return;newChat();renderAsk();$('q')?.focus()});
@@ -282,13 +392,14 @@ function renderAsk(){
   document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{chatFilter=b.dataset.filter;renderAsk()}));
   document.querySelectorAll('[data-delchat]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.delchat;if(confirmChatDelete!==id){confirmChatDelete=id;renderAsk();return}
     confirmChatDelete=null;chats=chats.filter(x=>x.id!==id);if(currentChat===id)currentChat=chats[0]?.id||null;saveChats();renderAsk()}));
-  $('assistantSel').addEventListener('change',e=>{chatAssistant=e.target.value;try{localStorage.setItem('impilo.ai.assistant',chatAssistant)}catch{};
+  $('assistantSel')?.addEventListener('change',e=>{chatAssistant=e.target.value;try{localStorage.setItem('impilo.ai.assistant',chatAssistant)}catch{};
     const cc=chatById(currentChat);if(cc){cc.assistantId=chatAssistant;saveChats()}renderAsk()});
   document.querySelectorAll('.wa-sugg button').forEach(b=>b.addEventListener('click',()=>{if(canAsk){$('q').value=b.textContent;ask()}}));
   const qa=$('q');qa.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()}});
   qa.addEventListener('input',()=>{qa.style.height='auto';qa.style.height=Math.min(140,qa.scrollHeight)+'px'});
   $('composer').addEventListener('submit',e=>{e.preventDefault();abort?abort.abort():ask()});
   const m=$('msgs');m.scrollTop=m.scrollHeight;
+  if(!(c&&c.messages.length))$('q')?.focus();
 }
 let chatsLoaded=false;function loadChatsOnce(){if(!chatsLoaded){loadChats();chatsLoaded=true}}
 async function ask(){
@@ -309,11 +420,12 @@ async function ask(){
     for(;;){const {value,done}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});
       let i;while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+1);if(!line.trim())continue;const ev=JSON.parse(line);
         if(ev.type==='token'){bot.content+=ev.text;const b=box();if(b){b.querySelector('.txt').innerHTML=mdLite(bot.content);const m=$('msgs');m.scrollTop=m.scrollHeight}}
-        else if(ev.type==='meta'){bot.meta=`${ev.model}${ev.grounded?' · from portal figures for '+(portal?.resolved?.label||'Zimbabwe'):''}`}
-        else if(ev.type==='done'){bot.meta+=` · ${((performance.now()-t0)/1000).toFixed(1)} s`}
+        else if(ev.type==='chart'){bot.chart=ev.chart;const b=box();if(b){b.classList.add('has-chart');b.insertAdjacentHTML('afterbegin',chartHtml(ev.chart));const t=b.querySelector('.txt');if(t&&!bot.content)t.innerHTML='';const m=$('msgs');m.scrollTop=m.scrollHeight}}
+        else if(ev.type==='meta'){bot.meta=ev.grounded?"From the portal's figures":''}
+        else if(ev.type==='done'){}
         else if(ev.type==='error'){throw Error(ev.message)}}}
-    if(!bot.content)bot.content='(No answer was returned.)';
-  }catch(e){if(e.name==='AbortError'){bot.meta+=' · stopped';if(!bot.content)bot.content='(Stopped.)'}else{bot.content=e.message;bot.error=true}}
+    if(!bot.content){bot.content='The assistant did not return an answer. Please try asking again.';bot.error=true}
+  }catch(e){if(e.name==='AbortError'){bot.meta=(bot.meta?bot.meta+' · ':'')+'stopped';if(!bot.content)bot.content='(Stopped.)'}else{bot.content=e.message;bot.error=true}}
   delete bot.writing;bot.time=new Date().toISOString();c.updated=bot.time;abort=null;saveChats();renderAsk();
 }
 

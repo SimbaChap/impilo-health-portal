@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="./auth.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports</title>
+<style>
+:root{--green:#218a39;--green-dark:#14532d;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--card:#fff;--soft:#f6f8f7;
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9l4-4 4 4M16 15l-4 4-4-4'/%3E%3C/svg%3E");
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+*{box-sizing:border-box}
+body{margin:0;background:transparent;font-size:14px}
+button,input,select,textarea{font:inherit}
+.app{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:1000px){.app{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+/* list */
+.list{padding:14px;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
+.list h2{font-size:15px;margin:0}
+.list .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.list input{width:100%;height:36px;border:1px solid #e2e5ea;border-radius:10px;padding:0 11px;box-shadow:0 1px 2px rgba(16,24,40,.06);margin-bottom:8px}
+.list input:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.sec{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#667781;margin:12px 4px 4px}
+.item{display:block;width:100%;text-align:left;border:0;background:none;border-radius:10px;padding:9px 10px;cursor:pointer;color:var(--ink)}
+.item:hover{background:var(--soft)}
+.item.on{background:#ecf7ee;box-shadow:inset 3px 0 0 var(--green)}
+.item b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item span{font-size:11.5px;color:var(--muted)}
+.empty{font-size:12.5px;color:var(--muted);padding:6px 8px}
+.tpl{display:block;width:100%;text-align:left;border:1px dashed #cfe5d4;background:#fbfdfb;border-radius:10px;padding:8px 10px;margin-bottom:6px;cursor:pointer}
+.tpl:hover{border-color:var(--green);background:#f3faf4}
+.tpl b{font-size:13px}.tpl span{display:block;font-size:11.5px;color:var(--muted)}
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;border-radius:10px;padding:0 13px;border:1px solid #e2e5ea;background:#fff;color:#1f2937;font-weight:600;font-size:13px;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.06);white-space:nowrap}
+.btn:hover{border-color:#cfd5dd;background:#fafafa}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff}.btn.primary:hover{background:var(--green-dark)}
+.btn.danger{color:#b91c1c}.btn.danger.confirm{background:#b91c1c;color:#fff;border-color:#b91c1c}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.icon{width:30px;height:30px;padding:0;justify-content:center}
+.btn svg{width:15px;height:15px}
+/* editor */
+.editor{display:flex;flex-direction:column;gap:12px;min-width:0}
+.head{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.titlerow{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.title{flex:1;min-width:240px;font-size:22px;font-weight:800;border:1px solid transparent;border-radius:10px;padding:4px 8px;margin-left:-8px;letter-spacing:-.01em}
+.title:hover{border-color:var(--line)}.title:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.desc{width:100%;border:1px solid transparent;border-radius:10px;padding:6px 8px;margin-left:-8px;color:#475569;resize:vertical;min-height:34px}
+.desc:hover{border-color:var(--line)}.desc:focus{outline:0;border-color:var(--green)}
+.actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px}
+.badge.ro{background:#fdf1d6;color:#8a5a00}.badge.dirty{background:#eef2ff;color:#3730a3}.badge.ok{background:#ecf7ee;color:#176c2b}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;user-select:none}
+.switch input{appearance:none;-webkit-appearance:none;width:36px;height:20px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;transition:background .15s;margin:0}
+.switch input:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.switch input:checked{background:var(--green)}.switch input:checked:after{left:18px}
+.menu{position:relative}
+.menu ul{position:absolute;right:0;top:calc(100% + 4px);z-index:20;list-style:none;margin:0;padding:4px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 30px -12px rgba(15,23,42,.3);min-width:220px;display:none}
+.menu.open ul{display:block}
+.menu li button{width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:7px;cursor:pointer;display:flex;flex-direction:column}
+.menu li button:hover{background:var(--soft)}
+.menu li small{color:var(--muted);font-size:11.5px}
+.settings{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;padding-top:10px;border-top:1px solid #eef1f4}
+.settings label,.lab{display:block;font-size:11.5px;font-weight:600;color:#475569;margin-bottom:4px}
+.field select,.field input{height:36px;border:1px solid #e2e5ea;border-radius:10px;padding:0 12px;background:#fff;color:#111827;box-shadow:0 1px 2px rgba(16,24,40,.06);max-width:230px}
+.field select{-webkit-appearance:none;appearance:none;padding-right:32px;background:#fff var(--chev) no-repeat right 9px center;cursor:pointer}
+.field select:focus,.field input:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.seg{display:inline-flex;border:1px solid #e2e5ea;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.06)}
+.seg button{border:0;background:#fff;font-size:13px;height:34px;padding:0 11px;cursor:pointer;color:#475569;display:inline-flex;align-items:center;gap:5px}
+.seg button+button{border-left:1px solid #e2e5ea}
+.seg button[aria-pressed=true]{background:#e7f6ea;color:var(--green-dark);font-weight:600}
+.seg svg{width:15px;height:15px}
+.ask{display:flex;gap:8px}
+.ask .in{flex:1;display:flex;align-items:center;gap:8px;border:1.5px solid #e2e5ea;border-radius:12px;padding:0 12px;background:#fff}
+.ask .in:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.12)}
+.ask input{flex:1;border:0;outline:0;font-size:14px;padding:10px 0;background:none}
+.hint{font-size:12.5px;color:var(--muted)}.hint.warn{color:#9a3412}.hint b{color:var(--ink)}
+/* sections */
+.section{padding:14px 16px}
+.shead{display:flex;gap:8px;align-items:center}
+.stitle{flex:1;font-size:15.5px;font-weight:700;border:1px solid transparent;border-radius:8px;padding:4px 6px;margin-left:-6px;min-width:0}
+.stitle:hover{border-color:var(--line)}.stitle:focus{outline:0;border-color:var(--green)}
+.sbody{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;border-radius:999px;padding:0 6px 0 11px;background:#ecf7ee;color:#14532d;font-size:12.5px;font-weight:600}
+.chip i{display:inline-block;width:9px;height:9px;border-radius:50%}
+.chip button{border:0;background:none;width:20px;height:20px;border-radius:50%;cursor:pointer;color:#14532d;line-height:1;font-size:15px}
+.chip button:hover{background:#d3eed9}
+.addind select{height:30px;border-radius:999px;border:1px dashed #9fd2ab;background:#fff;color:var(--green-dark);font-weight:600;font-size:12.5px;padding:0 10px;cursor:pointer}
+.opts{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#475569}
+.opts label{display:inline-flex;gap:6px;align-items:center;cursor:pointer;margin:0;font-weight:500;font-size:12.5px}
+.opts input{accent-color:var(--green)}
+.out{margin-top:12px;border-top:1px solid #eef1f4;padding-top:12px;min-height:40px}
+.chart{width:100%;max-width:900px;display:block;margin-bottom:10px}
+.chart text{font-family:inherit}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#475569;margin:-2px 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:inherit}
+thead th{background:#218a39;color:#fff;font-weight:600;position:sticky;top:0}
+tbody tr:nth-child(even){background:#f8faf9}tbody tr:nth-child(odd){background:#fff}
+tfoot td{font-weight:700;background:#ecf7ee}
+td.na{color:#94a3b8}
+.status{padding:18px;text-align:center;color:var(--muted);font-size:13px}.status.error{color:#b91c1c}
+.textsec textarea{width:100%;min-height:90px;border:1px solid #e2e5ea;border-radius:10px;padding:10px 12px;resize:vertical;line-height:1.5;margin-top:8px}
+.textsec textarea:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.textsec .ro{white-space:pre-wrap;line-height:1.55;color:#1f2937;margin-top:6px}
+.addbar{display:flex;gap:8px;justify-content:center;padding:6px}
+.hero{padding:40px 30px;text-align:center}
+.hero h1{font-size:22px;margin:10px 0 6px}
+.hero p{color:var(--muted);margin:0 auto 18px;max-width:560px;line-height:1.5}
+.hero .tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-width:900px;margin:18px auto 0;text-align:left}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:all .2s;pointer-events:none;z-index:50}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.ro-mode .edit-only{display:none!important}
+.ro-mode input:not(.keep),.ro-mode select:not(.keep),.ro-mode textarea{pointer-events:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="card list">
+    <div class="top"><h2>Reports</h2><button class="btn primary sm" id="new">+ New report</button></div>
+    <input id="find" placeholder="Search reports" aria-label="Search reports">
+    <div id="lists"></div>
+  </aside>
+  <main class="editor" id="editor"></main>
+</div>
+<div id="toast" role="status"></div>
+<script>
+const API='http://127.0.0.1:8765/api';
+const EMBEDDED=window.parent!==window;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>n==null?'–':Number(n).toLocaleString('en-GB');
+const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const uid=()=>'r-'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const sid=()=>Math.random().toString(36).slice(2,10);
+const PALETTE=['#218a39','#2563eb','#d97706','#c0367a','#0d9488','#7c3aed','#dc2626','#475569'];
+const user=window.ImpiloAuth?.user||{};
+let META=null,GEO=null,FACILITIES=[],reports=[],current=null,saved='',results={},globalFilters=null,confirmDelete=false;
+const LABEL={},DIM={};
+
+function toast(t,ms=2200){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),ms)}
+async function api(path,opts={}){const r=await fetch(API+path,{cache:'no-store',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){let m='Something went wrong.';try{m=(await r.json()).detail||m}catch{}if(typeof m!=='string')m='Please check the report settings.';throw Error(m)}return r}
+const isMine=()=>!current||current.mine!==false;
+const dirty=()=>current&&JSON.stringify(strip(current))!==saved;
+function strip(r){const{mine,owner,ownerName,created,updated,...rest}=r;return rest}
+
+// ---------------------------------------------------------------- list
+async function loadList(){try{reports=(await (await api('/reports')).json()).reports}catch(e){reports=[]}renderList()}
+function renderList(){
+  const q=norm($('find').value),f=reports.filter(r=>!q||norm(r.title+' '+(r.description||'')+' '+(r.ownerName||'')).includes(q));
+  const mine=f.filter(r=>r.mine),shared=f.filter(r=>!r.mine);
+  const when=t=>t?new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'';
+  const item=r=>`<button class="item${current&&current.id===r.id?' on':''}" data-open="${esc(r.id)}"><b>${esc(r.title)}</b><span>${r.mine?(r.shared?'Shared · ':'Private · '):'By '+esc(r.ownerName)+' · '}${r.sections} section${r.sections===1?'':'s'} · ${when(r.updated)}</span></button>`;
+  $('lists').innerHTML=`<div class="sec">My reports</div>${mine.map(item).join('')||'<div class="empty">No saved reports yet.</div>'}
+    <div class="sec">Shared with everyone</div>${shared.map(item).join('')||'<div class="empty">Nothing shared by others yet.</div>'}
+    <div class="sec">Start from a template</div>${(META?.templates||[]).map(t=>`<button class="tpl" data-tpl="${t.id}"><b>${esc(t.title)}</b><span>${esc(t.description)}</span></button>`).join('')}`;
+  $('lists').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openReport(b.dataset.open));
+  $('lists').querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>fromTemplate(b.dataset.tpl));
+}
+$('find').oninput=renderList;
+$('new').onclick=()=>guard(()=>newReport());
+function guard(fn){if(dirty()&&!confirm('You have unsaved changes to this report. Leave without saving?'))return;fn()}
+
+// ---------------------------------------------------------------- report objects
+function defaultPeriod(){const end=META.dataEnd,d=new Date(end);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-11);return{from:d.toISOString().slice(0,10),to:null,grain:'month'}}
+function scopeFromPortal(){const f=globalFilters?.filters||{};return{province:f.province||null,district:f.district||null,type:f.type||null,facility:f.facility||null}}
+function newReport(sections){
+  current={id:uid(),title:'Untitled report',description:'',period:defaultPeriod(),scope:scopeFromPortal(),sex:'all',shared:false,mine:true,
+    sections:sections||[{id:sid(),type:'data',title:'',indicators:['hivPositive'],rows:'period',columns:'none',chart:'bar',showTable:true,hideEmpty:true}]};
+  saved='__new__';results={};confirmDelete=false;renderEditor();renderList();
+}
+function fromTemplate(id){guard(()=>{const t=META.templates.find(x=>x.id===id);newReport(t.sections.map(s=>({id:sid(),title:'',text:'',showTable:true,hideEmpty:true,chart:'table',columns:'none',...s})));
+  current.title=t.title;current.description=t.description;if(t.id==='hiv'||t.id==='maternal'||t.id==='tbmalaria'){current.period.grain='quarter';const d=new Date(META.dataEnd);d.setUTCFullYear(d.getUTCFullYear()-2);d.setUTCMonth(0);d.setUTCDate(1);current.period.from=d.toISOString().slice(0,10)}
+  renderEditor()})}
+async function openReport(id){guard(async()=>{try{current=await (await api('/reports/'+encodeURIComponent(id))).json();current.sections=current.sections.map(s=>({id:s.id||sid(),...s}));saved=JSON.stringify(strip(current));results={};confirmDelete=false;renderEditor();renderList()}catch(e){toast(e.message)}})}
+function duplicate(){const copy=JSON.parse(JSON.stringify(strip(current)));copy.id=uid();copy.title='Copy of '+current.title;copy.shared=false;copy.sections.forEach(s=>s.id=sid());current={...copy,mine:true};saved='__new__';renderEditor();renderList();toast('Copy made. Save it to keep it.')}
+async function save(){
+  if(!isMine())return;try{
+    const r=await (await api('/reports/'+current.id,{method:'PUT',body:JSON.stringify(strip(current))})).json();
+    current={...r,sections:r.sections};saved=JSON.stringify(strip(current));toast('Report saved.');await loadList();renderHeadState()}catch(e){toast(e.message,4000)}}
+async function del(){
+  if(!confirmDelete){confirmDelete=true;renderHeadState();setTimeout(()=>{confirmDelete=false;renderHeadState()},4000);return}
+  if(saved==='__new__'){current=null;renderEditor();return}
+  try{await api('/reports/'+current.id,{method:'DELETE'});toast('Report deleted.');current=null;saved='';await loadList();renderEditor()}catch(e){toast(e.message,4000)}}
+async function exportAs(fmtx){
+  try{const r=await api('/reports/export?format='+fmtx,{method:'POST',body:JSON.stringify(strip(current))});const blob=await r.blob();
+    const name=(r.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||('report.'+fmtx);
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Downloaded '+name)}
+  catch(e){toast(e.message,4000)}}
+
+// ---------------------------------------------------------------- editor
+function indOptions(exclude=[]){const groups=[...new Set(META.indicators.map(x=>x.group))];
+  return groups.map(g=>`<optgroup label="${esc(g)}">${META.indicators.filter(x=>x.group===g&&!exclude.includes(x.key)).map(x=>`<option value="${x.key}">${esc(x.label)}</option>`).join('')}</optgroup>`).join('')}
+const dimOptions=(sel,allowNone)=>META.dimensions.filter(d=>allowNone||d.key!=='none').map(d=>`<option value="${d.key}"${d.key===sel?' selected':''}>${esc(d.key==='period'?'Period ('+current.period.grain+')':d.label)}</option>`).join('');
+const month=d=>d?String(d).slice(0,7):'';
+function renderEditor(){
+  const ed=$('editor');
+  if(!current){
+    ed.innerHTML=`<div class="card hero"><svg width="64" height="64" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="5" width="32" height="38" rx="5" fill="#ecf7ee" stroke="#218a39" stroke-width="2"/><rect x="14" y="27" width="4" height="9" rx="1" fill="#218a39"/><rect x="22" y="20" width="4" height="16" rx="1" fill="#34b35a"/><rect x="30" y="24" width="4" height="12" rx="1" fill="#218a39"/><path d="M14 13h20M14 18h12" stroke="#218a39" stroke-width="2" stroke-linecap="round"/></svg>
+      <h1>Build your own report</h1><p>Pick indicators, choose how to group them (by period, province, district, facility, sex or age group), show them as tables or charts, add notes, then save, share or download as Excel, CSV or PDF.</p>
+      <button class="btn primary" id="heroNew">+ New report</button>
+      <div class="tpls">${META.templates.map(t=>`<button class="tpl" data-tpl="${t.id}"><b>${esc(t.title)}</b><span>${esc(t.description)}</span></button>`).join('')}</div></div>`;
+    $('heroNew').onclick=()=>newReport();ed.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>fromTemplate(b.dataset.tpl));postHeight();return}
+  const ro=!isMine(),r=current;
+  ed.className='editor'+(ro?' ro-mode':'');
+  const provs=GEO.provinces,dists=r.scope.province?provs.find(p=>p.id===r.scope.province)?.districts||[]:provs.flatMap(p=>p.districts);
+  const facs=FACILITIES.filter(f=>(!r.scope.province||f.provinceId===r.scope.province)&&(!r.scope.district||f.districtId===r.scope.district)&&(!r.scope.type||f.type===r.scope.type||(r.scope.type==='HOSPITAL'&&f.typeGroup==='Hospital')));
+  const facShown=(r.scope.district||r.scope.province?facs:facs.filter(f=>f.hasData)).slice(0,400);
+  ed.innerHTML=`<div class="card head">
+    <div class="titlerow"><input class="title" id="title" value="${esc(r.title)}" aria-label="Report title" maxlength="200">
+      <div class="actions"><span id="state"></span>
+        <label class="switch edit-only" title="Everyone signed in can open it (read only)"><input type="checkbox" id="share" ${r.shared?'checked':''}>Share with everyone</label>
+        <button class="btn primary edit-only" id="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg>Save</button>
+        ${window.ImpiloAuth?.mayDownload('reports')===false?'':`<div class="menu" id="expMenu"><button class="btn" id="exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download</button>
+          <ul><li><button data-exp="xlsx"><b>Excel</b><small>Tables with Excel charts</small></button></li><li><button data-exp="pdf"><b>PDF</b><small>Print-ready, with the ministry header</small></button></li><li><button data-exp="csv"><b>CSV</b><small>Plain figures</small></button></li></ul></div>`}
+        <button class="btn" id="dup" title="Make your own copy">Duplicate</button>
+        <button class="btn danger edit-only" id="del">Delete</button></div></div>
+    <textarea class="desc" id="desc" rows="1" placeholder="Add a short description (optional)" maxlength="2000">${esc(r.description)}</textarea>
+    <div class="ask edit-only"><div class="in"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      <input id="askq" placeholder="Describe a table, e.g. HIV positive cases by province and sex for 2024 as a bar chart"></div><button class="btn primary" id="askgo">Add to report</button></div>
+    <div class="hint" id="askhint">Type what you want and a new table or chart is added below.</div>
+    <div class="settings">
+      <div class="field"><label for="pfrom">From</label><input type="month" id="pfrom" value="${month(r.period.from)}" min="${month(META.dataStart)||'2015-01'}" max="${month(META.dataEnd)}"></div>
+      <div class="field"><label for="pto">To</label><input type="month" id="pto" value="${month(r.period.to||META.dataEnd)}" min="${month(META.dataStart)||'2015-01'}" max="${month(META.dataEnd)}"></div>
+      <div><span class="lab">Step</span><div class="seg" id="grain">${['month','quarter','year'].map(g=>`<button data-v="${g}" aria-pressed="${r.period.grain===g}">${g[0].toUpperCase()+g.slice(1)}</button>`).join('')}</div></div>
+      <div class="field"><label for="sprov">Province</label><select id="sprov"><option value="">All provinces</option>${provs.map(p=>`<option value="${p.id}"${p.id===r.scope.province?' selected':''}>${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="sdist">District</label><select id="sdist"><option value="">All districts</option>${dists.map(d=>`<option value="${d.id}"${d.id===r.scope.district?' selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="stype">Facility type</label><select id="stype"><option value="">All facility types</option><option value="HOSPITAL"${r.scope.type==='HOSPITAL'?' selected':''}>Hospitals (all levels)</option>${GEO.facilityTypes.map(t=>`<option value="${t.code}"${t.code===r.scope.type?' selected':''}>${esc(t.label)}</option>`).join('')}</select></div>
+      <div class="field"><label for="sfac">Facility</label><select id="sfac"><option value="">All facilities (${fmt(facs.length)})</option>${facShown.map(f=>`<option value="${f.id}"${f.id===r.scope.facility?' selected':''}>${esc(f.name)}${f.hasData?' ●':''}</option>`).join('')}</select></div>
+      <div><span class="lab">Sex</span><div class="seg" id="rsex">${[['all','All'],['female','Female'],['male','Male']].map(([v,l])=>`<button data-v="${v}" aria-pressed="${r.sex===v}">${l}</button>`).join('')}</div></div>
+      ${EMBEDDED?'<button class="btn sm edit-only" id="usePortal" title="Copy the province, district, type and facility from the filter bar above">Use portal filters</button>':''}
+    </div></div>
+    <div id="sections"></div>
+    <div class="addbar edit-only"><button class="btn" id="addData">+ Table or chart</button><button class="btn" id="addText">+ Text</button></div>`;
+  bindHead();renderSections();renderHeadState();postHeight();
+}
+function renderHeadState(){
+  const s=$('state');if(!s||!current)return;
+  s.innerHTML=!isMine()?`<span class="badge ro">Shared by ${esc(current.ownerName)} · read only</span>`:saved==='__new__'?'<span class="badge dirty">Not saved yet</span>':dirty()?'<span class="badge dirty">Unsaved changes</span>':`<span class="badge ok">Saved</span>`;
+  const d=$('del');if(d){d.classList.toggle('confirm',confirmDelete);d.textContent=confirmDelete?'Click again to delete':'Delete'}
+}
+function changed(rerun){renderHeadState();if(rerun){results={};renderSections()}}
+function bindHead(){
+  const r=current;
+  $('title').oninput=e=>{r.title=e.target.value||'Untitled report';changed()};
+  $('desc').oninput=e=>{r.description=e.target.value;changed()};
+  $('share').onchange=e=>{r.shared=e.target.checked;changed();toast(r.shared?'Everyone will be able to open it once you save.':'Only you will see it once you save.')};
+  $('save').onclick=save;$('dup').onclick=duplicate;$('del').onclick=del;
+  if($('exp')){$('exp').onclick=e=>{e.stopPropagation();$('expMenu').classList.toggle('open')};
+  document.addEventListener('click',()=>$('expMenu')?.classList.remove('open'));
+  $('expMenu').querySelectorAll('[data-exp]').forEach(b=>b.onclick=()=>{$('expMenu').classList.remove('open');exportAs(b.dataset.exp)});}
+  const per=()=>{const f=$('pfrom').value,t=$('pto').value;if(f&&t&&f>t){toast('Choose a start month on or before the end month.');return}
+    r.period.from=f?f+'-01':null;if(t){const [y,m]=t.split('-').map(Number);r.period.to=t===month(META.dataEnd)?null:new Date(Date.UTC(y,m,0)).toISOString().slice(0,10)}changed(true)};
+  $('pfrom').onchange=per;$('pto').onchange=per;
+  document.querySelectorAll('#grain button').forEach(b=>b.onclick=()=>{r.period.grain=b.dataset.v;renderEditor();changed(true)});
+  document.querySelectorAll('#rsex button').forEach(b=>b.onclick=()=>{r.sex=b.dataset.v;document.querySelectorAll('#rsex button').forEach(x=>x.setAttribute('aria-pressed',x===b));changed(true)});
+  $('sprov').onchange=e=>{r.scope={...r.scope,province:e.target.value||null,district:null,facility:null};renderEditor();changed(true)};
+  $('sdist').onchange=e=>{const d=GEO.provinces.flatMap(p=>p.districts.map(x=>({...x,pid:p.id}))).find(x=>x.id===e.target.value);r.scope={...r.scope,district:e.target.value||null,province:d?d.pid:r.scope.province,facility:null};renderEditor();changed(true)};
+  $('stype').onchange=e=>{r.scope={...r.scope,type:e.target.value||null,facility:null};renderEditor();changed(true)};
+  $('sfac').onchange=e=>{const f=FACILITIES.find(x=>x.id===e.target.value);r.scope=f?{...r.scope,facility:f.id,province:f.provinceId,district:f.districtId}:{...r.scope,facility:null};renderEditor();changed(true)};
+  if($('usePortal'))$('usePortal').onclick=()=>{r.scope=scopeFromPortal();renderEditor();changed(true);toast('Copied the portal filters into this report.')};
+  $('addData').onclick=()=>{r.sections.push({id:sid(),type:'data',title:'',indicators:['attendances'],rows:'period',columns:'none',chart:'bar',showTable:true,hideEmpty:true});changed();renderSections();setTimeout(()=>document.querySelector('.section:last-child')?.scrollIntoView({behavior:'smooth',block:'center'}),50)};
+  $('addText').onclick=()=>{r.sections.push({id:sid(),type:'text',text:''});changed();renderSections();setTimeout(()=>document.querySelector('.section:last-child textarea')?.focus(),50)};
+  $('askgo').onclick=askWords;$('askq').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();askWords()}};
+}
+const CHART_ICONS={table:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>',
+  bar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 20V11M12 20V5M18 20v-7M3 20h18"/></svg>',
+  line:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 7-8M3 20h18"/></svg>',
+  pie:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3v9h9a9 9 0 11-9-9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/></svg>'};
+function renderSections(){
+  const box=$('sections');if(!box)return;const ro=!isMine();
+  box.innerHTML=current.sections.map((s,k)=>{
+    const tools=`<div class="actions edit-only"><button class="btn icon sm" data-up="${k}" title="Move up" ${k===0?'disabled':''}>↑</button><button class="btn icon sm" data-down="${k}" title="Move down" ${k===current.sections.length-1?'disabled':''}>↓</button><button class="btn icon sm" data-remove="${k}" title="Remove section">✕</button></div>`;
+    if(s.type==='text')return`<div class="card section textsec" data-k="${k}"><div class="shead"><span class="lab" style="flex:1;margin:0">Text</span>${tools}</div>${ro?`<div class="ro">${esc(s.text)}</div>`:`<textarea data-text="${k}" placeholder="Write notes, findings or recommendations…">${esc(s.text)}</textarea>`}</div>`;
+    return`<div class="card section" data-k="${k}">
+      <div class="shead"><input class="stitle" data-title="${k}" value="${esc(s.title)}" placeholder="${esc(autoTitle(s))}" aria-label="Section title">${tools}</div>
+      <div class="sbody edit-only">
+        <div><span class="lab">Indicators</span><div class="chips">${s.indicators.map((i,n)=>`<span class="chip"><i style="background:${PALETTE[n%PALETTE.length]}"></i>${esc(LABEL[i]||i)}<button data-rmind="${k}:${i}" title="Remove" aria-label="Remove ${esc(LABEL[i])}">×</button></span>`).join('')}
+          ${s.indicators.length<META.maxIndicators?`<span class="addind"><select data-addind="${k}" aria-label="Add indicator"><option value="">+ Add indicator</option>${indOptions(s.indicators)}</select></span>`:''}</div></div>
+        <div class="field"><label>Rows</label><select data-rows="${k}">${dimOptions(s.rows,false)}</select></div>
+        <div class="field"><label>Columns</label><select data-cols="${k}">${dimOptions(s.columns,true)}</select></div>
+        <div><span class="lab">Show as</span><div class="seg">${['table','bar','line','pie'].map(c=>`<button data-chart="${k}:${c}" aria-pressed="${s.chart===c}" title="${c[0].toUpperCase()+c.slice(1)}">${CHART_ICONS[c]}${c[0].toUpperCase()+c.slice(1)}</button>`).join('')}</div></div>
+        <div class="opts">${s.chart!=='table'?`<label><input type="checkbox" data-showtable="${k}" ${s.showTable?'checked':''}>Table under the chart</label>`:''}${['province','district','facilityType'].includes(s.rows)||['province','district','facilityType'].includes(s.columns)?`<label><input type="checkbox" data-hide="${k}" ${s.hideEmpty?'checked':''}>Hide areas with no data</label>`:''}</div>
+      </div>
+      <div class="out" id="out-${s.id}"><div class="status">Loading…</div></div></div>`}).join('')||'<div class="card status">This report is empty. Add a table, chart or text below.</div>';
+  bindSections();current.sections.forEach(s=>{if(s.type==='data')runSection(s)});postHeight();
+}
+function autoTitle(s){const inds=s.indicators.map(i=>LABEL[i]||i);const by=[s.rows,s.columns].filter(d=>d&&d!=='none').map(d=>DIM[d].toLowerCase());
+  return (inds.length>2?inds.slice(0,2).join(', ')+' and more':inds.join(' and ')||'Table')+(by.length?' by '+by.join(' and '):'')}
+function bindSections(){
+  const S=current.sections,box=$('sections'),mod=(fn,rerun=true,rerender=true)=>e=>{fn(e);changed();if(rerender)renderSections()};
+  const k=el=>+Object.values(el.dataset)[0].split(':')[0];
+  box.querySelectorAll('[data-title]').forEach(e=>e.oninput=()=>{S[k(e)].title=e.value;changed()});
+  box.querySelectorAll('[data-text]').forEach(e=>e.oninput=()=>{S[k(e)].text=e.value;changed();postHeight()});
+  box.querySelectorAll('[data-up]').forEach(e=>e.onclick=mod(()=>{const i=k(e);[S[i-1],S[i]]=[S[i],S[i-1]]}));
+  box.querySelectorAll('[data-down]').forEach(e=>e.onclick=mod(()=>{const i=k(e);[S[i+1],S[i]]=[S[i],S[i+1]]}));
+  box.querySelectorAll('[data-remove]').forEach(e=>e.onclick=mod(()=>S.splice(k(e),1)));
+  box.querySelectorAll('[data-rmind]').forEach(e=>e.onclick=mod(()=>{const [i,ind]=e.dataset.rmind.split(':');const s=S[+i];if(s.indicators.length>1)s.indicators=s.indicators.filter(x=>x!==ind);else toast('A table needs at least one indicator.')}));
+  box.querySelectorAll('[data-addind]').forEach(e=>e.onchange=mod(()=>{if(e.value)S[k(e)].indicators.push(e.value)}));
+  box.querySelectorAll('[data-rows]').forEach(e=>e.onchange=mod(()=>{const s=S[k(e)];s.rows=e.value;if(s.columns===s.rows)s.columns='none'}));
+  box.querySelectorAll('[data-cols]').forEach(e=>e.onchange=mod(()=>{const s=S[k(e)];if(e.value===s.rows){toast('Columns need a different grouping from rows.');return}s.columns=e.value}));
+  box.querySelectorAll('[data-chart]').forEach(e=>e.onclick=mod(()=>{const [i,c]=e.dataset.chart.split(':');S[+i].chart=c}));
+  box.querySelectorAll('[data-showtable]').forEach(e=>e.onchange=mod(()=>{S[k(e)].showTable=e.checked}));
+  box.querySelectorAll('[data-hide]').forEach(e=>e.onchange=mod(()=>{S[k(e)].hideEmpty=e.checked}));
+}
+async function runSection(s){
+  const out=$('out-'+s.id);if(!out)return;
+  const body={period:current.period,scope:current.scope,sex:current.sex,section:s},key=JSON.stringify(body);
+  try{
+    if(!results[key])results[key]=api('/reports/run',{method:'POST',body:key}).then(r=>r.json());
+    const res=await results[key];if(!$('out-'+s.id))return;
+    $('out-'+s.id).innerHTML=renderResult(res,s);postHeight();
+  }catch(e){delete results[key];if($('out-'+s.id))$('out-'+s.id).innerHTML=`<div class="status error">${esc(e.message)}</div>`;postHeight()}
+}
+
+// ---------------------------------------------------------------- tables and charts
+function flat(res){
+  const one=res.columns==='none',cols=res.indicators.flatMap(i=>res.colAxis.map(c=>({i,c})));
+  const header=[res.rows!=='none'?DIM[res.rows]:'',...cols.map(({i,c})=>one?i.label:res.indicators.length===1?c.label:i.label+' · '+c.label)];
+  const body=res.rowAxis.map(r=>[r.label,...cols.map(({i,c})=>res.cells[i.key][r.key][c.key])]);
+  const total=res.rows!=='none'&&body.length>1?['Total',...cols.map((_,k)=>body.every(row=>row[k+1]==null)?null:body.reduce((t,row)=>t+(row[k+1]||0),0))]:null;
+  return{header,body,total}
+}
+function renderResult(res,s){
+  const{header,body,total}=flat(res);
+  if(!body.length)return'<div class="status">No rows to show. Facilities in this selection have no data loaded yet.</div>';
+  const allNull=body.every(r=>r.slice(1).every(v=>v==null));
+  let html='';
+  if(allNull)html+='<div class="hint warn" style="margin-bottom:8px">No facility in this selection has data loaded yet, so the cells are empty (not zero).</div>';
+  if(s.chart!=='table'&&!allNull)html+=chartSvg(s.chart,header,body);
+  if(s.chart==='table'||s.showTable)html+=`<div class="tablewrap"><table><thead><tr>${header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map((v,j)=>j?`<td class="${v==null?'na':''}">${fmt(v)}</td>`:`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>${total?`<tfoot><tr>${total.map((v,j)=>`<td>${j?fmt(v):esc(v)}</td>`).join('')}</tr></tfoot>`:''}</table></div>`;
+  return html
+}
+// Female and male keep the portal's colours whenever a table is split by sex.
+const sexColor=n=>/(^|· )Female$/.test(n)?'#c0367a':/(^|· )Male$/.test(n)?'#2563eb':/(^|· )Not recorded$/.test(n)?'#94a3b8':null;
+function niceMax(v){if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p}
+function chartSvg(kind,header,body){
+  const series=header.slice(1).map((name,k)=>({name,color:sexColor(name)||PALETTE[k%PALETTE.length],vals:body.map(r=>r[k+1]||0)})),cats=body.map(r=>r[0]);
+  const legend=s=>`<div class="legend">${s.map(x=>`<span><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join('')}</div>`;
+  if(kind==='pie'){
+    const s=series[0],tot=s.vals.reduce((a,b)=>a+b,0)||1;let a0=-Math.PI/2;const R=110,cx=130,cy=125;
+    const slices=s.vals.map((v,k)=>{const a1=a0+v/tot*Math.PI*2,large=a1-a0>Math.PI?1:0,p=`M${cx},${cy}L${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)}A${R},${R} 0 ${large} 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)}Z`;
+      const mid=(a0+a1)/2;a0=a1;return v?`<path d="${v===tot?`M${cx-R},${cy}a${R},${R} 0 1 0 ${2*R},0a${R},${R} 0 1 0 ${-2*R},0`:p}" fill="${PALETTE[k%PALETTE.length]}" stroke="#fff" stroke-width="2"><title>${esc(cats[k])}: ${fmt(v)} (${Math.round(v/tot*100)}%)</title></path>`+(v/tot>.06?`<text x="${cx+R*.62*Math.cos(mid)}" y="${cy+R*.62*Math.sin(mid)}" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="12" font-weight="700">${Math.round(v/tot*100)}%</text>`:''):''}).join('');
+    return`<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap"><svg class="chart" viewBox="0 0 260 250" style="max-width:260px">${slices}</svg><div class="legend" style="flex-direction:column;align-items:flex-start;margin:0">${cats.map((c,k)=>`<span><i style="background:${PALETTE[k%PALETTE.length]}"></i>${esc(c)}: <b>${fmt(s.vals[k])}</b></span>`).join('')}<span style="color:#94a3b8">${esc(s.name)} · total ${fmt(tot===1&&!s.vals.some(Boolean)?0:tot)}</span></div></div>`;
+  }
+  const W=860,H=280,L=48,B=cats.length>8?62:30,T=12,Rr=12,pw=W-L-Rr,ph=H-T-B,max=niceMax(Math.max(1,...series.flatMap(s=>s.vals)));
+  const y=v=>T+ph-(v/max)*ph,grid=[0,.25,.5,.75,1].map(f=>`<line x1="${L}" x2="${W-Rr}" y1="${y(max*f)}" y2="${y(max*f)}" stroke="#eef1f4"/><text x="${L-6}" y="${y(max*f)}" text-anchor="end" dominant-baseline="central" font-size="11" fill="#64748b">${fmt(Math.round(max*f*100)/100)}</text>`).join('');
+  const step=pw/cats.length,rot=cats.length>8;
+  const labels=cats.map((c,k)=>{const x=L+step*k+step/2,show=cats.length<=24||k%Math.ceil(cats.length/24)===0;return show?`<text x="${x}" y="${H-B+14}" font-size="11" fill="#475569" text-anchor="${rot?'end':'middle'}" ${rot?`transform="rotate(-35 ${x} ${H-B+14})"`:''}>${esc(String(c).length>18?String(c).slice(0,17)+'…':c)}</text>`:''}).join('');
+  let marks='';
+  if(kind==='bar'){const gw=step*.78,bw=gw/series.length;
+    marks=series.map((s,j)=>s.vals.map((v,k)=>`<rect x="${L+step*k+(step-gw)/2+bw*j}" y="${y(v)}" width="${Math.max(1,bw-1.5)}" height="${Math.max(0,T+ph-y(v))}" rx="2" fill="${s.color}"><title>${esc(cats[k])} · ${esc(s.name)}: ${fmt(v)}</title></rect>`).join('')).join('')}
+  else marks=series.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" points="${s.vals.map((v,k)=>`${L+step*k+step/2},${y(v)}`).join(' ')}"/>`+s.vals.map((v,k)=>`<circle cx="${L+step*k+step/2}" cy="${y(v)}" r="3.5" fill="#fff" stroke="${s.color}" stroke-width="2"><title>${esc(cats[k])} · ${esc(s.name)}: ${fmt(v)}</title></circle>`).join('')).join('');
+  return`${series.length>1?legend(series):''}<svg class="chart" viewBox="0 0 ${W} ${H}">${grid}<line x1="${L}" x2="${W-Rr}" y1="${T+ph}" y2="${T+ph}" stroke="#cbd5e1"/>${marks}${labels}</svg>`;
+}
+
+// ---------------------------------------------------------------- ask in words
+const SYN=[['maternalDeaths',/maternal (death|mortality)|mothers? (who )?died/],['stillBirths',/still ?births?|stillborn/],['liveBirths',/live births?/],
+  ['deliveries',/deliver(y|ies)|maternity/],['deaths',/(?<!maternal )\bdeaths?\b|mortality/],['hivPositive',/hiv (positive|cases?)|positive hiv|hiv\+|\bpositives?\b(?!.*malaria)/],
+  ['htsTests',/hiv test|\bhts\b|tested for hiv|hiv testing/],['artNew',/\bart\b|antiretroviral|initiat/],['ancBookings',/\banc\b|antenatal|bookings?/],
+  ['malariaPositive',/malaria (positive|cases?)|positive malaria/],['malariaTests',/malaria test|malaria(?! (positive|cases?))/],['tbRegistered',/\btb\b|tuberculosis/],
+  ['opd',/\bopd\b|outpatient/],['attendances',/attendances?|visits?(?! opd)|patients? seen|footfall/]];
+const DIMSYN=[['period',/month|quarter|year|period|time|trend/],['province',/province/],['district',/district/],['facilityType',/facility types?|type of facility|types?/],['facility',/facilit(y|ies)|clinic|site/],['sex',/\bsex\b|gender|male|female/],['ageGroup',/\bage/]];
+function parseWords(text){
+  const t=' '+text.toLowerCase()+' ',out={indicators:[]};
+  for(const [k,re] of SYN)if(re.test(t)&&!out.indicators.includes(k))out.indicators.push(k);
+  if(out.indicators.includes('hivPositive')&&out.indicators.includes('htsTests')&&!/test/.test(t.replace(/hiv test(s|ing)?/,'')))void 0;
+  if(out.indicators.includes('malariaPositive'))out.indicators=out.indicators.filter(x=>x!=='malariaTests'||/malaria test/.test(t));
+  const by=t.split(/\b(?:by|per|across|for each|split by|broken down by)\b/).slice(1).join(' and ');
+  const dims=[];if(by){for(const part of by.split(/\band\b|,|\bthen\b/)){const d=DIMSYN.find(([,re])=>re.test(part));if(d&&!dims.includes(d[0]))dims.push(d[0])}}
+  if(/monthly|each month|per month|by month/.test(t)){out.grain='month';if(!dims.includes('period'))dims.unshift('period')}
+  else if(/quarter/.test(t)){out.grain='quarter';if(!dims.includes('period'))dims.unshift('period')}
+  else if(/yearly|annual|by year|per year|each year/.test(t)){out.grain='year';if(!dims.includes('period'))dims.unshift('period')}
+  out.rows=dims[0]||'period';out.columns=dims[1]||'none';
+  const end=META.dataEnd.slice(0,10);let m;
+  if((m=t.match(/(?:from|since|between)\s+(\d{4})\s*(?:to|until|and|-|–)\s*(\d{4}|now|today|date)/))){out.from=`${m[1]}-01-01`;out.to=/\d/.test(m[2])?`${m[2]}-12-31`:null}
+  else if((m=t.match(/\b(\d{4})\s*(?:to|-|–)\s*(\d{4}|now)/))){out.from=`${m[1]}-01-01`;out.to=/\d/.test(m[2])?`${m[2]}-12-31`:null}
+  else if((m=t.match(/(?:since|from)\s+(\d{4})/))){out.from=`${m[1]}-01-01`;out.to=null}
+  else if((m=t.match(/\b(?:in|for|during)\s+(\d{4})\b/))){out.from=`${m[1]}-01-01`;out.to=`${m[1]}-12-31`}
+  else if((m=t.match(/last\s+(\d+)\s+(month|year)s?/))){const d=new Date(end);d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()-(m[2]==='year'?+m[1]*12:+m[1])+1);out.from=d.toISOString().slice(0,10);out.to=null}
+  if(out.to&&out.to>end)out.to=null;
+  out.chart=/pie/.test(t)?'pie':/line|trend|over time/.test(t)?'line':/bar|chart|graph/.test(t)?'bar':/table/.test(t)?'table':(out.rows==='period'?'line':'bar');
+  if(out.chart==='pie'&&out.columns!=='none')out.chart='bar';
+  return out
+}
+function askWords(){
+  const q=$('askq').value.trim();if(!q)return;const p=parseWords(q),h=$('askhint');
+  if(!p.indicators.length){h.className='hint warn';h.innerHTML=`I couldn't find an indicator in that. Try one of: ${META.indicators.map(x=>esc(x.label.toLowerCase())).join(', ')}.`;return}
+  const r=current;let periodNote='';
+  if(p.from){r.period.from=p.from;r.period.to=p.to;periodNote=' and set the period'}
+  if(p.grain)r.period.grain=p.grain;
+  const s={id:sid(),type:'data',title:'',indicators:p.indicators.slice(0,META.maxIndicators),rows:p.rows,columns:p.columns,chart:p.chart,showTable:true,hideEmpty:true};
+  r.sections.push(s);$('askq').value='';
+  renderEditor();changed(!!periodNote);
+  $('askhint').className='hint';$('askhint').innerHTML=`Added <b>${esc(autoTitle(s))}</b> as a ${s.chart==='table'?'table':s.chart+' chart'}${periodNote}. You can change anything on it below.`;
+  setTimeout(()=>document.querySelector(`[data-k="${r.sections.length-1}"]`)?.scrollIntoView({behavior:'smooth',block:'center'}),60);
+}
+
+// ---------------------------------------------------------------- portal
+function postHeight(){if(EMBEDDED)requestAnimationFrame(()=>parent.postMessage({type:'reports-height',height:document.documentElement.scrollHeight},'*'))}
+if(EMBEDDED){new ResizeObserver(postHeight).observe(document.body);window.addEventListener('message',e=>{if(e.source===window.parent&&e.data?.type==='impilo-filters')globalFilters=e.data});parent.postMessage({type:'impilo-filters-request'},'*')}
+window.addEventListener('beforeunload',e=>{if(dirty()){e.preventDefault();e.returnValue=''}});
+async function init(){
+  try{
+    const [m,g,f]=await Promise.all([api('/reports/meta'),api('/geography'),api('/facilities')]);
+    META=await m.json();GEO=await g.json();FACILITIES=(await f.json()).data||[];
+    META.indicators.forEach(x=>LABEL[x.key]=x.label);META.dimensions.forEach(d=>DIM[d.key]=d.label);
+  }catch(e){$('editor').innerHTML=`<div class="card status error">${esc(e.message||'The reports service is not available. Run update.cmd, then reload.')}</div>`;return}
+  await loadList();renderEditor();
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="./auth.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data workspace</title>
+<style>
+:root{--green:#218a39;--green-dark:#14532d;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f6f8f7;--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 9l4-4 4 4M16 15l-4 4-4-4'/%3E%3C/svg%3E");
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+*{box-sizing:border-box}body{margin:0;background:transparent;font-size:14px}button,input,select,textarea{font:inherit}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.top{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:12px;flex-wrap:wrap}
+.top h1{font-size:18px;margin:0}.top p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.tabs{margin-left:auto;display:inline-flex;border:1px solid #e2e5ea;border-radius:10px;overflow:hidden}
+.tabs button{border:0;background:#fff;height:34px;padding:0 14px;cursor:pointer;color:#475569;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.tabs button+button{border-left:1px solid #e2e5ea}.tabs button[aria-pressed=true]{background:#e7f6ea;color:var(--green-dark);font-weight:600}
+.tabs svg{width:15px;height:15px}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:950px){.app{grid-template-columns:1fr}}
+.side{padding:10px}
+.side h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:6px 6px 6px}
+.ds{display:flex;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;cursor:pointer;gap:9px;align-items:center;color:var(--ink);font-size:13.5px}
+.ds:hover{background:var(--soft)}.ds.on{background:#ecf7ee;box-shadow:inset 3px 0 0 var(--green);font-weight:600}
+.ds svg{width:16px;height:16px;color:#64748b;flex:none}.ds.on svg{color:var(--green)}
+.main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:12px 14px}
+.field label,.lab{display:block;font-size:11.5px;font-weight:600;color:#475569;margin-bottom:4px}
+input,select{height:36px;border:1px solid #e2e5ea;border-radius:10px;padding:0 11px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.06);color:#111827}
+select{-webkit-appearance:none;appearance:none;padding-right:30px;background:#fff var(--chev) no-repeat right 8px center;cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--green);box-shadow:0 0 0 3px rgba(33,138,57,.14)}
+.btn{display:inline-flex;align-items:center;gap:6px;height:36px;border-radius:10px;padding:0 13px;border:1px solid #e2e5ea;background:#fff;color:#1f2937;font-weight:600;font-size:13px;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.06);white-space:nowrap}
+.btn:hover{border-color:#cfd5dd;background:#fafafa}.btn.primary{background:var(--green);border-color:var(--green);color:#fff}.btn.primary:hover{background:var(--green-dark)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}.btn:disabled{opacity:.5;cursor:default}.btn svg{width:15px;height:15px}
+.menu{position:relative}.pop{position:absolute;z-index:20;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 30px -12px rgba(15,23,42,.3);padding:8px;display:none;min-width:260px}
+.menu.open .pop{display:block}.pop.right{left:auto;right:0}
+.pop input{width:100%;margin-bottom:6px}
+.cols{max-height:320px;overflow:auto}
+.cols label{display:flex;gap:8px;align-items:center;padding:5px 6px;border-radius:7px;font-size:13px;cursor:pointer}.cols label:hover{background:var(--soft)}
+.cols input{height:auto;box-shadow:none;accent-color:var(--green)}
+.pop .row{display:flex;gap:6px;justify-content:space-between;margin-bottom:6px}
+.pop button.it{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:7px;cursor:pointer}.pop button.it:hover{background:var(--soft)}
+.pop small{display:block;color:var(--muted);font-size:11.5px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;color:#3730a3;border-radius:999px;padding:4px 4px 4px 11px;font-size:12.5px;font-weight:600}
+.fchip button{border:0;background:none;cursor:pointer;color:#3730a3;width:20px;height:20px;border-radius:50%}
+.fedit{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:0 14px 12px}
+.banner{padding:9px 14px;border-radius:10px;font-size:12.5px;background:#fdf6e3;color:#7a4b00;border:1px solid #f6e3b0}
+.tablecard{overflow:hidden}
+.tablewrap{overflow:auto;max-height:640px}
+table{border-collapse:collapse;width:100%;font-size:12.8px}
+th{position:sticky;top:0;background:#f8faf9;z-index:1;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;font-weight:600;color:#334155;cursor:pointer;user-select:none}
+th:hover{background:#eef5f0}th .s{color:#94a3b8;margin-left:4px;font-size:11px}th.lock{color:#8a5a00}
+td{padding:7px 10px;border-bottom:1px solid #f0f2f4;white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+tbody tr:hover{background:#f8fbf9;cursor:pointer}td.null{color:#cbd5e1}td.mask{color:#a16207;letter-spacing:.1em}
+tr.detail td{white-space:normal;background:#fbfcfb;cursor:default}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 18px;padding:6px 2px}
+.kv div{font-size:12.5px;border-bottom:1px dashed #eef1f4;padding:3px 0;display:flex;gap:8px}.kv b{color:#64748b;font-weight:600;min-width:120px}
+.pager{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:#475569;flex-wrap:wrap}
+.pager .sp{margin-left:auto;display:flex;gap:6px;align-items:center}
+.status{padding:28px;text-align:center;color:var(--muted)}.status.error{color:#b91c1c}
+/* SQL */
+.sqlapp{display:grid;grid-template-columns:270px minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:950px){.sqlapp{grid-template-columns:1fr}}
+.schema{padding:10px;max-height:760px;overflow:auto}
+.schema input{width:100%;margin-bottom:8px}
+.tbl{border-radius:8px}.tbl>button{display:flex;width:100%;border:0;background:none;text-align:left;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.8px;gap:6px;align-items:center;font-family:ui-monospace,Menlo,Consolas,monospace}
+.tbl>button:hover{background:var(--soft)}.tbl ul{list-style:none;margin:0 0 6px 18px;padding:0;display:none}.tbl.open ul{display:block}
+.tbl li{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:2px 6px;border-radius:6px;cursor:pointer;color:#334155;display:flex;justify-content:space-between;gap:8px}.tbl li:hover{background:#eef5f0}.tbl li small{color:#94a3b8}
+.editor{padding:12px}
+textarea#sql{width:100%;min-height:170px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.55;border:1px solid #e2e5ea;border-radius:10px;padding:10px 12px;resize:vertical;background:#fbfcfb;tab-size:2}
+.sqlbar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:#f8faf9;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer}.chip:hover{border-color:var(--green)}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-10px);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:all .2s;pointer-events:none;z-index:50}
+#toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="card top">
+  <div><h1>Data workspace</h1><p>Explore the records behind the portal's figures, choose columns, filter and download.</p></div>
+  <div class="tabs" id="tabs"><button data-tab="explore" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>Explore</button><button data-tab="sql" aria-pressed="false" id="sqlTab" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>SQL</button></div>
+</div>
+<div id="explore"></div>
+<div id="sqlview" style="display:none"></div>
+<div id="toast" role="status"></div>
+<script>
+const API='http://127.0.0.1:8765/api';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n).toLocaleString('en-GB');
+const OPS=[['contains','contains'],['equals','is'],['not','is not'],['starts','starts with'],['gt','greater than'],['lt','less than'],['notempty','has a value'],['empty','is empty']];
+const ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>';
+let META=null,dataEnd=null,Q={dataset:'hts',from:'',to:'',columns:[],filters:[],search:'',sort:null,desc:false,page:1,pageSize:100},res=null,seq=0,openRow=null,draftFilter=null;
+function toast(t,ms=2600){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),ms)}
+async function api(path,opts={}){const r=await fetch(API+path,{cache:'no-store',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok){let m='Request failed.';try{const b=await r.json();m=Array.isArray(b.detail)?b.detail.map(x=>x.msg).join('; '):b.detail||m}catch{}throw Error(m)}return r}
+function postHeight(){parent!==window&&requestAnimationFrame(()=>parent.postMessage({type:'workspace-height',height:document.documentElement.scrollHeight},'*'))}
+const monthEnd=m=>{const [y,mo]=m.split('-').map(Number);return new Date(Date.UTC(y,mo,0)).toISOString().slice(0,10)};
+function body(){const b={...Q};if(Q.from)b.from=Q.from+'-01';else delete b.from;if(Q.to)b.to=monthEnd(Q.to);else delete b.to;return b}
+async function download(url,payload){
+  try{const r=await api(url,{method:'POST',body:JSON.stringify(payload)});const blob=await r.blob();const name=(r.headers.get('content-disposition')||'').match(/filename="([^"]+)"/)?.[1]||'data';
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Downloaded '+name)}
+  catch(e){toast(e.message,4000)}
+}
+
+// ---------------------------------------------------------------- explore
+function renderExplore(){
+  const ds=META.datasets.find(d=>d.key===Q.dataset);
+  $('explore').innerHTML=`<div class="app">
+    <aside class="card side"><h2>Datasets</h2>${META.datasets.map(d=>`<button class="ds${d.key===Q.dataset?' on':''}" data-ds="${d.key}">${ICON}${esc(d.label)}</button>`).join('')}
+      <h2 style="margin-top:14px">Your access</h2><div class="hint" style="padding:0 6px 6px">${META.patientData?'You can see patient details.':'Patient details are hidden (shown as •••).'}<br>${META.canDownload?'You can download raw data.':'Downloads are not enabled for your account.'}</div></aside>
+    <div class="main">
+      <div class="card"><div class="bar">
+        ${ds.hasPeriod?`<div class="field"><label for="from">From</label><input type="month" id="from" value="${Q.from}" max="${dataEnd.slice(0,7)}"></div><div class="field"><label for="to">To</label><input type="month" id="to" value="${Q.to}" max="${dataEnd.slice(0,7)}"></div>`:''}
+        <div class="field" style="flex:1;min-width:200px"><label for="search">Search all columns</label><input id="search" value="${esc(Q.search)}" placeholder="Type to search…" style="width:100%"></div>
+        <div class="menu" id="colMenu"><button class="btn" id="colBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Columns${res?` (${res.shown.length}/${res.columns.length})`:''}</button><div class="pop" id="colPop"></div></div>
+        <button class="btn" id="addFilter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>Add filter</button>
+        ${META.canDownload?`<div class="menu" id="dlMenu"><button class="btn primary" id="dlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download</button><div class="pop right"><button class="it" data-dl="xlsx"><b>Excel</b><small>The rows and columns you see, all pages</small></button><button class="it" data-dl="csv"><b>CSV</b><small>Plain text, opens anywhere</small></button></div></div>`:''}
+      </div>
+      <div class="fedit" id="fedit"></div>
+      <div class="filters" id="fchips"></div></div>
+      ${!META.patientData?'<div class="banner">Patient details are hidden for your account: names, ID numbers, phone numbers, addresses, next of kin, dates of birth and register numbers show as •••.</div>':''}
+      <div class="card tablecard"><div id="table"><div class="status">Loading…</div></div></div>
+    </div></div>`;
+  bindExplore();renderFilters();renderTable();
+}
+function bindExplore(){
+  document.querySelectorAll('[data-ds]').forEach(b=>b.onclick=()=>{if(Q.dataset===b.dataset.ds)return;Q={...Q,dataset:b.dataset.ds,columns:[],filters:[],search:'',sort:null,desc:false,page:1};res=null;openRow=null;renderExplore();run()});
+  if($('from')){$('from').onchange=e=>{Q.from=e.target.value;Q.page=1;run()};$('to').onchange=e=>{Q.to=e.target.value;Q.page=1;run()}}
+  let t;$('search').oninput=e=>{clearTimeout(t);t=setTimeout(()=>{Q.search=e.target.value;Q.page=1;run()},350)};
+  $('colBtn').onclick=e=>{e.stopPropagation();$('colMenu').classList.toggle('open');renderCols()};
+  $('addFilter').onclick=()=>{draftFilter={column:res?.columns[0]?.key||'',op:'contains',value:''};renderFilters()};
+  if($('dlBtn')){$('dlBtn').onclick=e=>{e.stopPropagation();$('dlMenu').classList.toggle('open')};document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{$('dlMenu').classList.remove('open');const b2=body();delete b2.page;delete b2.pageSize;download('/workspace/export?format='+b.dataset.dl,b2)})}
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.menu'))document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'))});
+function renderCols(){
+  if(!res)return;const pop=$('colPop'),shown=new Set(res.shown);
+  pop.innerHTML=`<input id="colQ" placeholder="Find a column"><div class="row"><button class="btn sm" id="colAll">All</button><button class="btn sm" id="colNone">Only first</button></div><div class="cols">${res.columns.map(c=>`<label data-n="${esc((c.label+' '+c.key).toLowerCase())}"><input type="checkbox" data-col="${esc(c.key)}" ${shown.has(c.key)?'checked':''}>${esc(c.label)}${c.masked?' <span title="Hidden for your account">🔒</span>':''}</label>`).join('')}</div>`;
+  pop.onclick=e=>e.stopPropagation();
+  $('colQ').oninput=e=>pop.querySelectorAll('.cols label').forEach(l=>l.style.display=l.dataset.n.includes(e.target.value.toLowerCase())?'':'none');
+  const apply=()=>{Q.columns=[...pop.querySelectorAll('[data-col]:checked')].map(x=>x.dataset.col);if(!Q.columns.length)Q.columns=[res.columns[0].key];run()};
+  pop.querySelectorAll('[data-col]').forEach(c=>c.onchange=apply);
+  $('colAll').onclick=()=>{pop.querySelectorAll('[data-col]').forEach(c=>c.checked=true);apply()};
+  $('colNone').onclick=()=>{pop.querySelectorAll('[data-col]').forEach((c,i)=>c.checked=i<1);apply()};
+}
+function colLabel(k){return res?.columns.find(c=>c.key===k)?.label||k}
+function renderFilters(){
+  $('fchips').innerHTML=Q.filters.map((f,i)=>`<span class="fchip">${esc(colLabel(f.column))} ${esc(OPS.find(o=>o[0]===f.op)[1])}${['empty','notempty'].includes(f.op)?'':' "'+esc(f.value)+'"'}<button data-rmf="${i}" aria-label="Remove filter">×</button></span>`).join('')+(Q.filters.length>1?'<button class="btn sm" id="clearF">Clear filters</button>':'');
+  $('fchips').querySelectorAll('[data-rmf]').forEach(b=>b.onclick=()=>{Q.filters.splice(+b.dataset.rmf,1);Q.page=1;renderFilters();run()});
+  if($('clearF'))$('clearF').onclick=()=>{Q.filters=[];Q.page=1;renderFilters();run()};
+  const f=draftFilter;
+  $('fedit').innerHTML=f&&res?`<select id="fc">${res.columns.map(c=>`<option value="${esc(c.key)}"${c.key===f.column?' selected':''}>${esc(c.label)}</option>`).join('')}</select><select id="fo">${OPS.map(o=>`<option value="${o[0]}"${o[0]===f.op?' selected':''}>${o[1]}</option>`).join('')}</select>${['empty','notempty'].includes(f.op)?'':`<input id="fv" value="${esc(f.value)}" placeholder="Value">`}<button class="btn primary sm" id="fOk">Apply</button><button class="btn sm" id="fX">Cancel</button>`:'';
+  if(f&&res){$('fc').onchange=e=>f.column=e.target.value;$('fo').onchange=e=>{f.op=e.target.value;renderFilters()};if($('fv')){$('fv').oninput=e=>f.value=e.target.value;$('fv').onkeydown=e=>{if(e.key==='Enter')$('fOk').click()};$('fv').focus()}
+    $('fOk').onclick=()=>{Q.filters.push({...f});draftFilter=null;Q.page=1;renderFilters();run()};$('fX').onclick=()=>{draftFilter=null;renderFilters()}}
+  postHeight();
+}
+async function run(){
+  const my=++seq;if($('table')&&!res)$('table').innerHTML='<div class="status">Loading…</div>';
+  document.body.style.cursor='progress';
+  try{const r=await (await api('/workspace/query',{method:'POST',body:JSON.stringify(body())})).json();if(my!==seq)return;res=r;
+    if(!Q.from&&r.from){Q.from=String(r.from).slice(0,7);Q.to=String(r.to).slice(0,7);if($('from')){$('from').value=Q.from;$('to').value=Q.to}}
+    renderTable();const cb=$('colBtn');if(cb)cb.lastChild.textContent=`Columns (${r.shown.length}/${r.columns.length})`}
+  catch(e){if(my===seq)$('table').innerHTML=`<div class="status error">${esc(e.message)}</div>`;postHeight()}
+  finally{if(my===seq)document.body.style.cursor=''}
+}
+function cell(v,c){if(v===null||v===undefined||v==='')return`<td class="null">–</td>`;if(v==='•••')return`<td class="mask" title="Hidden for your account">•••</td>`;
+  if(typeof v==='boolean')return`<td>${v?'Yes':'No'}</td>`;return`<td title="${esc(v)}">${esc(v)}</td>`}
+function renderTable(){
+  if(!res||!$('table'))return;const cols=res.shown.map(k=>res.columns.find(c=>c.key===k)).filter(Boolean),pages=Math.max(1,Math.ceil(res.total/res.pageSize));
+  if(!res.total){$('table').innerHTML=`<div class="status">No rows match.${Q.filters.length||Q.search?' Try removing a filter or the search.':' Try a longer period.'}</div>`;postHeight();return}
+  const rows=res.rows.map((r,i)=>`<tr data-r="${i}">${cols.map(c=>cell(r[c.key],c)).join('')}</tr>`+(openRow===i?`<tr class="detail"><td colspan="${cols.length}"><div class="kv">${cols.map(c=>`<div><b>${esc(c.label)}</b><span>${r[c.key]==null||r[c.key]===''?'–':esc(r[c.key])}</span></div>`).join('')}</div></td></tr>`:'')).join('');
+  $('table').innerHTML=`<div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th data-sort="${esc(c.key)}" class="${c.masked?'lock':''}" title="${c.masked?'Hidden for your account':'Sort by '+esc(c.label)}">${esc(c.label)}${c.masked?' 🔒':''}<span class="s">${Q.sort===c.key?(Q.desc?'▼':'▲'):''}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="pager"><span><b>${fmt(res.total)}</b> row${res.total===1?'':'s'}${res.from?` · ${esc(String(res.from))} to ${esc(String(res.to))}`:''} · ${res.seconds}s</span>
+      <span class="sp">Rows per page <select id="ps">${[50,100,250,500,1000].map(n=>`<option${n===res.pageSize?' selected':''}>${n}</option>`).join('')}</select>
+      <button class="btn sm" id="prev" ${res.page<=1?'disabled':''}>Previous</button><span>Page ${res.page} of ${fmt(pages)}</span><button class="btn sm" id="next" ${res.page>=pages?'disabled':''}>Next</button></span></div>`;
+  document.querySelectorAll('[data-sort]').forEach(th=>th.onclick=()=>{if(Q.sort===th.dataset.sort)Q.desc=!Q.desc;else{Q.sort=th.dataset.sort;Q.desc=false}Q.page=1;run()});
+  document.querySelectorAll('tbody tr[data-r]').forEach(tr=>tr.onclick=()=>{openRow=openRow===+tr.dataset.r?null:+tr.dataset.r;renderTable()});
+  $('ps').onchange=e=>{Q.pageSize=+e.target.value;Q.page=1;run()};$('prev').onclick=()=>{Q.page--;openRow=null;run()};$('next').onclick=()=>{Q.page++;openRow=null;run()};
+  postHeight();
+}
+
+// ---------------------------------------------------------------- SQL (administrators)
+let SCHEMA=null,sqlRes=null;
+const EXAMPLES=[['HIV tests by entry point','SELECT entry_point, COUNT(*) AS tests\nFROM consultation.hts\nGROUP BY entry_point\nORDER BY tests DESC'],
+  ['Patients by sex','SELECT sex, COUNT(*) AS people\nFROM report.person_demographic\nGROUP BY sex'],
+  ['Facilities per province','SELECT p.province_name, COUNT(*) AS facilities\nFROM registry.facility_registry f\nJOIN registry.province p ON p.province_id = f.province_id\nGROUP BY p.province_name\nORDER BY facilities DESC'],
+  ['Tables I can read','SHOW TABLES FROM report']];
+function renderSql(){
+  $('sqlview').innerHTML=`<div class="sqlapp"><aside class="card schema"><input id="tq" placeholder="Find a table or column"><div id="tables"><div class="hint">Loading tables…</div></div></aside>
+    <div class="main"><div class="card editor"><textarea id="sql" spellcheck="false" placeholder="SELECT …">${esc(localStorage.getItem('impilo.ws.sql')||EXAMPLES[1][1])}</textarea>
+      <div class="sqlbar"><button class="btn primary" id="runSql"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>Run</button><span class="hint">Ctrl + Enter</span>
+        <div class="menu" id="sqlDl" style="margin-left:auto"><button class="btn" id="sqlDlBtn">Download results</button><div class="pop right"><button class="it" data-sdl="xlsx"><b>Excel</b><small>Up to 200,000 rows</small></button><button class="it" data-sdl="csv"><b>CSV</b><small>Up to 200,000 rows</small></button></div></div></div>
+      <div class="hint" style="margin-top:8px">Read-only: SELECT, WITH, SHOW, DESCRIBE and EXPLAIN. One statement at a time; the screen shows up to 5,000 rows and queries stop after 30 seconds.</div>
+      <div class="chips">${EXAMPLES.map((x,i)=>`<button class="chip" data-ex="${i}">${esc(x[0])}</button>`).join('')}</div></div>
+      <div class="card tablecard"><div id="sqlOut"><div class="status">Run a query to see results here.</div></div></div></div></div>`;
+  const ta=$('sql');ta.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();runSql()}if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart;ta.setRangeText('  ',s,ta.selectionEnd,'end')}};
+  ta.oninput=()=>{try{localStorage.setItem('impilo.ws.sql',ta.value)}catch{}};
+  $('runSql').onclick=runSql;
+  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{ta.value=EXAMPLES[+b.dataset.ex][1];ta.oninput();runSql()});
+  $('sqlDlBtn').onclick=e=>{e.stopPropagation();$('sqlDl').classList.toggle('open')};
+  document.querySelectorAll('[data-sdl]').forEach(b=>b.onclick=()=>{$('sqlDl').classList.remove('open');download('/workspace/sql/export?format='+b.dataset.sdl,{sql:ta.value})});
+  $('tq').oninput=renderTables;loadSchema();postHeight();
+}
+async function loadSchema(){if(!SCHEMA){try{SCHEMA=(await (await api('/workspace/schema')).json()).tables}catch(e){$('tables').innerHTML=`<div class="hint">${esc(e.message)}</div>`;return}}renderTables()}
+function renderTables(){
+  const q=($('tq').value||'').toLowerCase();
+  const list=SCHEMA.filter(t=>!q||t.name.toLowerCase().includes(q)||t.columns.some(c=>c.name.toLowerCase().includes(q)));
+  $('tables').innerHTML=`<div class="hint" style="margin:0 4px 6px">${list.length} table${list.length===1?'':'s'} you can read</div>`+list.slice(0,300).map(t=>`<div class="tbl${q&&!t.name.toLowerCase().includes(q)?' open':''}"><button data-t="${esc(t.name)}">▸ ${esc(t.name)}</button><ul>${t.columns.map(c=>`<li data-c="${esc(c.name)}">${esc(c.name)}<small>${esc(c.type)}</small></li>`).join('')}</ul></div>`).join('');
+  document.querySelectorAll('[data-t]').forEach(b=>{b.onclick=()=>b.parentElement.classList.toggle('open');b.ondblclick=()=>{$('sql').value=`SELECT *\nFROM ${b.dataset.t}\nLIMIT 100`;$('sql').oninput();runSql()}});
+  document.querySelectorAll('[data-c]').forEach(li=>li.onclick=()=>{const ta=$('sql');ta.setRangeText(li.dataset.c,ta.selectionStart,ta.selectionEnd,'end');ta.focus();ta.oninput()});
+  postHeight();
+}
+async function runSql(){
+  const out=$('sqlOut');out.innerHTML='<div class="status">Running…</div>';$('runSql').disabled=true;
+  try{const r=await (await api('/workspace/sql',{method:'POST',body:JSON.stringify({sql:$('sql').value})})).json();sqlRes=r;
+    out.innerHTML=r.columns.length?`<div class="tablewrap"><table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${r.rows.map(row=>`<tr>${row.map(v=>v===null?'<td class="null">NULL</td>':`<td title="${esc(v)}">${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="pager"><span><b>${fmt(r.count)}</b> row${r.count===1?'':'s'}${r.truncated?' (first 5,000 shown; download for more)':''} · ${r.seconds}s</span></div>`:'<div class="status">The query ran but returned no columns.</div>'}
+  catch(e){out.innerHTML=`<div class="status error">${esc(e.message)}</div>`}
+  finally{$('runSql').disabled=false;postHeight()}
+}
+
+// ---------------------------------------------------------------- start
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));const sql=b.dataset.tab==='sql';
+  $('explore').style.display=sql?'none':'';$('sqlview').style.display=sql?'':'none';if(sql&&!$('sql'))renderSql();postHeight()});
+async function init(){
+  try{const [m,f]=await Promise.all([api('/workspace/datasets'),api('/facility')]);META=await m.json();dataEnd=(await f.json()).latestDate}
+  catch(e){$('explore').innerHTML=`<div class="card status error">${esc(e.message)}</div>`;postHeight();return}
+  if(META.isAdmin)$('sqlTab').style.display='';
+  renderExplore();run();
+  if(parent!==window)new ResizeObserver(postHeight).observe(document.body);
+}
+init();
+</script>
+</body>
+</html>

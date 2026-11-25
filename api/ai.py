@@ -577,15 +577,36 @@ class ChatRequest(BaseModel):
     filters: dict = {}
 
 
+def _chart_for(req):
+    """A chart for questions that ask for one (worked out from the data, not by the model)."""
+    try:
+        import charts, geo
+        p = charts.plan(req.message, [m.model_dump() for m in req.history])
+        if not p: return None, None
+        m = geo._main()
+        latest = m._with_registry(lambda c: m._facility(c))['latestDate'] or date.today()
+        return charts.build(p, latest)
+    except Exception:
+        return None, None  # a chart is a bonus: never let it stop the answer
+
+
 @router.post('/chat')
 def chat(req: ChatRequest):
-    if not _ollama_up():
-        raise HTTPException(503, 'Ollama is not running. Start it on the Models tab.')
+    chart, figures = _chart_for(req)
+    up = _ollama_up()
     s = settings()
     a = next((x for x in assistants() if x['id'] == req.assistantId), None) or assistants()[0]
     model = a.get('modelName') or a.get('baseModel') or s.get('defaultModel')
-    if not model:
-        raise HTTPException(400, 'No model chosen yet. Download a model on the Models tab and set it as the default.')
+    if not up or not model:
+        if chart:  # the chart doesn't need the model: show it on its own
+            def only_chart():
+                yield json.dumps({'type': 'meta', 'assistant': a['name'], 'grounded': True}) + '\n'
+                yield json.dumps({'type': 'chart', 'chart': chart}) + '\n'
+                yield json.dumps({'type': 'token', 'text': "Here's the chart from the portal's figures. (The assistant isn't available to describe it right now.)"}) + '\n'
+                yield json.dumps({'type': 'done'}) + '\n'
+            return StreamingResponse(only_chart(), media_type='application/x-ndjson', headers={'Cache-Control': 'no-store'})
+        if not up: raise HTTPException(503, 'The assistant is not available right now. Ask an administrator to start it (Configuration › Models).')
+        raise HTTPException(400, 'The assistant is not set up yet. Ask an administrator to choose a model (Configuration › Models).')
     messages = []
     if not a.get('modelName'):  # built assistants already carry their instructions and examples
         messages.append({'role': 'system', 'content': _system_prompt(a)})
@@ -598,37 +619,66 @@ def chat(req: ChatRequest):
         context = _portal_context({k: req.filters.get(k) for k in ('province', 'district', 'type', 'facility', 'from', 'to')})
         messages.append({'role': 'system', 'content': context})
     messages += [m.model_dump() for m in req.history[-6:]] + [{'role': 'user', 'content': req.message}]
+    if figures:
+        messages.insert(len(messages) - 1, {'role': 'system', 'content': figures})
     opts = _options(s)
     if context and (opts.get('num_ctx') or 0) < 4096:
         # The portal figures alone are ~1,200 tokens; a smaller window would silently cut them off.
         opts['num_ctx'] = 4096
 
     def stream():
-        yield json.dumps({'type': 'meta', 'model': model, 'assistant': a['name'], 'grounded': bool(context)}) + '\n'
-        try:
-            with httpx.stream('POST', OLLAMA + '/api/chat', json={'model': model, 'messages': messages, 'stream': True,
-                                                                   'options': opts, 'keep_alive': s['keep_alive']},
-                              timeout=httpx.Timeout(30, read=600)) as r:
-                if r.status_code >= 400:
-                    r.read()
-                    yield json.dumps({'type': 'error', 'message': f'Ollama: {r.json().get("error", r.text) if r.content else r.status_code}'}) + '\n'
-                    return
-                for line in r.iter_lines():
-                    if not line:
-                        continue
-                    msg = json.loads(line)
-                    if msg.get('error'):
-                        yield json.dumps({'type': 'error', 'message': msg['error']}) + '\n'
+        yield json.dumps({'type': 'meta', 'assistant': a['name'], 'grounded': bool(context or chart)}) + '\n'
+        if chart:
+            yield json.dumps({'type': 'chart', 'chart': chart}, default=str) + '\n'
+        # Reasoning models (qwen3, deepseek-r1, ...) "think" before answering. Ask them not to, so the whole
+        # answer length goes to the reply; if a model still sends <think>...</think>, it is left out.
+        body = {'model': model, 'messages': messages, 'stream': True, 'options': opts, 'keep_alive': s['keep_alive'], 'think': False}
+        for attempt in (1, 2):
+            sent, thinking, buf = False, False, ''
+            try:
+                with httpx.stream('POST', OLLAMA + '/api/chat', json=body, timeout=httpx.Timeout(30, read=600)) as r:
+                    if r.status_code >= 400:
+                        r.read()
+                        err = r.json().get('error', r.text) if r.content else str(r.status_code)
+                        if attempt == 1 and 'think' in str(err).lower():
+                            body.pop('think', None); continue  # older Ollama or a model without the option
+                        yield json.dumps({'type': 'error', 'message': 'The assistant could not answer right now. Please try again, or ask an administrator to check the AI configuration.'}) + '\n'
                         return
-                    piece = (msg.get('message') or {}).get('content', '')
-                    if piece:
-                        yield json.dumps({'type': 'token', 'text': piece}) + '\n'
-                    if msg.get('done'):
-                        secs = (msg.get('eval_duration') or 0) / 1e9
-                        yield json.dumps({'type': 'done', 'tokens': msg.get('eval_count'),
-                                          'tokensPerSecond': round(msg['eval_count'] / secs, 1) if secs and msg.get('eval_count') else None}) + '\n'
-        except httpx.HTTPError as e:
-            yield json.dumps({'type': 'error', 'message': f'Lost connection to Ollama ({e.__class__.__name__}).'}) + '\n'
+                    for line in r.iter_lines():
+                        if not line:
+                            continue
+                        msg = json.loads(line)
+                        if msg.get('error'):
+                            yield json.dumps({'type': 'error', 'message': 'The assistant stopped unexpectedly. Please try again.'}) + '\n'
+                            return
+                        buf += (msg.get('message') or {}).get('content', '')
+                        out = ''
+                        while buf:
+                            if thinking:
+                                end = buf.find('</think>')
+                                if end < 0: buf = buf[-8:]; break
+                                buf, thinking = buf[end + 8:], False
+                            else:
+                                start = buf.find('<think>')
+                                if start < 0:
+                                    keep = next((k for k in range(min(7, len(buf)), 0, -1) if '<think>'.startswith(buf[-k:])), 0)
+                                    out, buf = out + buf[:len(buf) - keep], buf[len(buf) - keep:]
+                                    break
+                                out, buf, thinking = out + buf[:start], buf[start + 7:], True
+                        if out and (sent or out.strip()):
+                            text = out if sent else out.lstrip()
+                            sent = True
+                            yield json.dumps({'type': 'token', 'text': text}) + '\n'
+                        if msg.get('done'):
+                            if buf and not thinking: yield json.dumps({'type': 'token', 'text': buf}) + '\n'; sent = True
+                            if not sent:
+                                yield json.dumps({'type': 'error', 'message': "The assistant ran out of room before it finished its answer. Try asking again, or ask an administrator to raise the answer length (Configuration › Optimise)."}) + '\n'
+                                return
+                            yield json.dumps({'type': 'done'}) + '\n'
+                return
+            except httpx.HTTPError:
+                yield json.dumps({'type': 'error', 'message': 'The assistant is not reachable right now. Please try again shortly.'}) + '\n'
+                return
 
     return StreamingResponse(stream(), media_type='application/x-ndjson', headers={'Cache-Control': 'no-store'})
 

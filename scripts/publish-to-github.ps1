@@ -34,11 +34,11 @@ if (-not (git config user.name))  { git config user.name $Owner }
 if (-not (git config user.email)) { git config user.email ((gh api user --jq .id) + "+$Owner@users.noreply.github.com") }
 
 git add -A
-$bad = git diff --cached --name-only | Where-Object { $_ -match '^(data|backups|config|run|logs)/|(^|/)\.env$|auth-data/|ai-data/|\.venv/' }
+$bad = git diff --cached --name-only | Where-Object { $_ -match '^(data|backups|config|run|logs)/|(^|/)\.env$|auth-data/|ai-data/|report-data/|\.venv/' }
 if ($bad) { git reset -q; throw "Stopped: these private files were about to be published:`n$($bad -join "`n")" }
 
 git diff --cached --quiet
-if ($LASTEXITCODE -ne 0) { git commit -q -m "National Health Portal: registers, overview map, AI assistant, sign-in" }
+if ($LASTEXITCODE -ne 0) { git commit -q -m ("Update National Health Portal " + (Get-Date -Format "yyyy-MM-dd HH:mm")) }
 
 $null = cmd /c "gh repo view $Owner/$Repo >nul 2>&1"
 if ($LASTEXITCODE -ne 0) {
@@ -46,7 +46,8 @@ if ($LASTEXITCODE -ne 0) {
 } else {
   if (-not (git remote | Select-String -Quiet '^origin$')) { git remote add origin "https://github.com/$Owner/$Repo.git" }
   gh repo edit "$Owner/$Repo" --visibility public --accept-visibility-change-consequences
-  git push -u origin main
+  # This PC's copy is the master: replace whatever is on GitHub with it.
+  git push --force -u origin main
 }
 if ($LASTEXITCODE -ne 0) { throw 'The push did not complete - see the message above.' }
 Write-Host "`nDone: https://github.com/$Owner/$Repo" -ForegroundColor Green
